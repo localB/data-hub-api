@@ -2,10 +2,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-def diff_versions(model_meta_data, old_revision, new_revision):
+def diff_versions(model_meta_data, old_version, new_version):
     """Audit versions comparision with the delta returned."""
     changes = {}
-    raw_changes = _get_changes(old_revision, new_revision)
+    raw_changes = _get_changes(old_version, new_version)
 
     for db_field_name, values in raw_changes.items():
         field = _get_db_field_from_column_name(model_meta_data, db_field_name)
@@ -16,9 +16,7 @@ def diff_versions(model_meta_data, old_revision, new_revision):
 
 def is_not_empty_or_none(value):
     """Checks if value is not empty or none."""
-    if value in ['', None]:
-        return False
-    return True
+    return value not in ('', None)
 
 
 def _get_changes(old_version, new_version):
@@ -35,34 +33,31 @@ def _get_changes(old_version, new_version):
     return changes
 
 
-def _get_db_field_from_column_name(model_meta_data, db_field_name):
+def _get_db_field_from_column_name(model_meta_data, db_column_name):
     """Gets django db field for a given column name"""
     try:
-        return model_meta_data.get_field(db_field_name)
+        return model_meta_data.get_field(db_column_name)
     except models.FieldDoesNotExist:
         return None
 
 
 def _get_value_for_field(field, value):
     """Checks field type and if required retrieves friendly value from related model."""
-    if type(field) is models.ForeignKey:
-        return _get_friendly_repr_of_object_reference(field.related_model, value)
-    if type(field) is models.ManyToManyField:
+    if not field.is_relation:
+        return value
+    if field.many_to_many or field.one_to_many:
         return [
             _get_friendly_repr_of_object_reference(
                 field.related_model, one_value,
             ) for one_value in value
         ]
-    return value
+    return _get_friendly_repr_of_object_reference(field.related_model, value)
 
 
 def _get_friendly_repr_of_object_reference(db_model, value):
     """Gets friendly representation for a given object reference."""
     try:
         result = db_model.objects.get(pk=value)
-    except ValidationError:
+    except (db_model.DoesNotExist, ValueError, TypeError, ValidationError):
         return value
-    except db_model.DoesNotExist:
-        return value
-    else:
-        return str(result)
+    return str(result)
