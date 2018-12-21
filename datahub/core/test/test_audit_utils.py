@@ -100,7 +100,7 @@ def test_get_friendly_repr_of_object_reference_for_existing_object():
     'value',
     (
         'hello',
-        str(uuid.uuid4()),
+        'c33f4ce3-051a-11e9-aa56-c82a140516f8',
         1,
     ),
 )
