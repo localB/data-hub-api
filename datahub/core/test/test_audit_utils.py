@@ -99,9 +99,9 @@ def test_get_friendly_repr_of_object_reference_for_existing_object():
 @pytest.mark.parametrize(
     'value',
     (
-        ('hello',),
-        (str(uuid.uuid4()),),
-        (1,),
+        'hello',
+        str(uuid.uuid4()),
+        1,
     ),
 )
 def test_get_friendly_repr_of_object_reference_returns_value_when_no_object_found(value):
