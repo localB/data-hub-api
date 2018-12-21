@@ -2,7 +2,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.viewsets import GenericViewSet
 from reversion.models import Version
 
-from datahub.core.audit_utils import diff_revisions
+from datahub.core.audit_utils import diff_versions
 
 
 class AuditViewSet(GenericViewSet):
@@ -54,7 +54,7 @@ class AuditViewSet(GenericViewSet):
                 'user': creator_repr,
                 'timestamp': v_new.revision.date_created,
                 'comment': v_new.revision.get_comment() or '',
-                'changes': diff_revisions(
+                'changes': diff_versions(
                     model_meta_data, v_old.field_dict, v_new.field_dict,
                 ),
             })

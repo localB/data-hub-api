@@ -2,8 +2,8 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
-def diff_revisions(model_meta_data, old_revision, new_revision):
-    """Audit revision comparision with the delta returned."""
+def diff_versions(model_meta_data, old_revision, new_revision):
+    """Audit versions comparision with the delta returned."""
     changes = {}
     raw_changes = _get_changes(old_revision, new_revision)
 

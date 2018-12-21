@@ -1,5 +1,4 @@
 import unittest.mock
-import uuid
 
 import pytest
 from django.db import models
@@ -11,7 +10,7 @@ from datahub.core.audit_utils import (
     _get_db_field_from_column_name,
     _get_friendly_repr_of_object_reference,
     _get_value_for_field,
-    diff_revisions,
+    diff_versions,
     is_not_empty_or_none,
 )
 from datahub.investment.models import InvestmentProject
@@ -20,8 +19,8 @@ from datahub.investment.models import InvestmentProject
 pytestmark = pytest.mark.django_db
 
 
-def test_audit_diff_revisions():
-    """Test audit diff revisions."""
+def test_audit_diff_versions():
+    """Test audit diff versions."""
     given = {
         'old': {
             'email': 'val1',
@@ -43,7 +42,7 @@ def test_audit_diff_revisions():
         'last_name': [None, 'added'],
     }
 
-    result = diff_revisions(Advisor._meta, given['old'], given['new'])
+    result = diff_versions(Advisor._meta, given['old'], given['new'])
     assert result == expected
 
 
