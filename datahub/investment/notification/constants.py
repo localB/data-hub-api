@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-IST_EMAIL_ADDRESS = 'enquires@invest-trade.uk'
+IST_EMAIL_ADDRESS = ''
 
 
 class Template(Enum):
