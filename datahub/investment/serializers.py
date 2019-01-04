@@ -2,6 +2,7 @@
 from collections import Counter
 from functools import partial
 
+import reversion
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy
 from rest_framework import serializers
@@ -12,6 +13,9 @@ from datahub.company.serializers import NestedAdviserField
 from datahub.core.constants import InvestmentProjectStage
 from datahub.core.serializers import NestedRelatedField, PermittedFieldsModelSerializer
 from datahub.core.validate_utils import DataCombiner
+from datahub.investment.constants import (
+    ProjectManagerRequestStatus as ProjectManagerRequestStatusValue,
+)
 from datahub.investment.models import (
     InvestmentDeliveryPartner,
     InvestmentProject,
@@ -21,6 +25,7 @@ from datahub.investment.models import (
     InvestorType,
     Involvement,
     LikelihoodToLand,
+    ProjectManagerRequestStatus,
     SpecificProgramme,
 )
 from datahub.investment.validate import REQUIRED_MESSAGE, validate
@@ -81,6 +86,7 @@ CORE_FIELDS = (
     'comments',
     'country_investment_originates_from',
     'level_of_involvement_simplified',
+    'note',
 )
 
 VALUE_FIELDS = (
@@ -123,6 +129,7 @@ REQUIREMENTS_FIELDS = (
 )
 
 TEAM_FIELDS = (
+    'project_manager_request_status',
     'project_manager',
     'project_assurance_adviser',
     'project_manager_team',
@@ -219,6 +226,11 @@ class IProjectSerializer(PermittedFieldsModelSerializer):
     )
     archived_by = NestedAdviserField(read_only=True)
 
+    project_manager_request_status = NestedRelatedField(
+        ProjectManagerRequestStatus, required=False, allow_null=True,
+    )
+    note = serializers.CharField(write_only=True, required=False, allow_null=True)
+
     # Value fields
     fdi_value = NestedRelatedField(meta_models.FDIValue, required=False, allow_null=True)
     average_salary = NestedRelatedField(
@@ -256,7 +268,11 @@ class IProjectSerializer(PermittedFieldsModelSerializer):
     stage_log = NestedInvestmentProjectStageLogSerializer(many=True, read_only=True)
 
     def save(self, **kwargs):
-        """Saves when and who assigned a project manager for the first time."""
+        """
+        Saves when and who assigned a project manager for the first time.
+        Also saves when a project manager was request for the first time.
+
+        """
         if (
             'project_manager' in self.validated_data
             and (self.instance is None or self.instance.project_manager is None)
@@ -264,7 +280,24 @@ class IProjectSerializer(PermittedFieldsModelSerializer):
             kwargs['project_manager_first_assigned_on'] = now()
             kwargs['project_manager_first_assigned_by'] = self.context['current_user']
 
+        pm_requested = ProjectManagerRequestStatusValue.requested.value.id
+        if (
+            'project_manager_request_status' in self.validated_data
+            and str(self.validated_data['project_manager_request_status'].pk) == pm_requested
+            and (self.instance is None or self.instance.project_manager is None)
+        ):
+            kwargs['project_manager_first_requested_on'] = now()
+
+        self.set_note()
         super().save(**kwargs)
+
+    def set_note(self):
+        """
+        Checks for a note and if present sets the comment on the revision so the note can
+         be stored with the accompanying data changes.
+        """
+        if 'note' in self.validated_data:
+            reversion.set_comment(self.validated_data.pop('note'))
 
     def validate_estimated_land_date(self, value):
         """Validate estimated land date."""
@@ -287,6 +320,7 @@ class IProjectSerializer(PermittedFieldsModelSerializer):
 
         self._check_if_investment_project_can_be_moved_to_verify_win(data)
         self._check_if_investment_project_can_be_moved_to_won(data)
+        self._validate_for_project_manager_request_status(data)
         self._validate_for_stage(data)
         self._update_status(data)
         return data
@@ -323,6 +357,18 @@ class IProjectSerializer(PermittedFieldsModelSerializer):
                     'stage': self.default_error_messages['only_ivt_can_move_to_won'],
                 }
                 raise serializers.ValidationError(errors)
+
+    def _validate_for_project_manager_request_status(self, data):
+        if 'project_manager_request_status' not in data:
+            return
+        pm_rejected = ProjectManagerRequestStatusValue.rejected.value.id
+        if str(data['project_manager_request_status'].pk) == pm_rejected and 'note' not in data:
+            errors = {
+                'project_manager_request_status':
+                    'A note is required when marking a project manager request as rejected.',
+                'note': REQUIRED_MESSAGE,
+            }
+            raise serializers.ValidationError(errors)
 
     def _validate_for_stage(self, data):
         fields = None

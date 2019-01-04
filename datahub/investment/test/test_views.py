@@ -26,7 +26,11 @@ from datahub.core.test_utils import (
 )
 from datahub.feature_flag.test.factories import FeatureFlagFactory
 from datahub.investment import views
-from datahub.investment.constants import FEATURE_FLAG_STREAMLINED_FLOW, LikelihoodToLand
+from datahub.investment.constants import (
+    FEATURE_FLAG_STREAMLINED_FLOW,
+    LikelihoodToLand,
+    ProjectManagerRequestStatus,
+)
 from datahub.investment.models import (
     InvestmentDeliveryPartner,
     InvestmentProject,
@@ -1196,6 +1200,121 @@ class TestPartialUpdateView(APITestMixin):
         }
         response = self.api_client.patch(url, data=request_data)
         assert response.status_code == status.HTTP_200_OK
+
+    def test_add_a_note_to_a_project(self):
+        """
+        Tests adding a note to a project and check if the note gets
+        saved in the revision history.
+        """
+        investment_project = InvestmentProjectFactory(name='project name')
+        url = reverse('api-v3:investment:investment-item', kwargs={'pk': investment_project.pk})
+        note = 'A note about this project'
+
+        request_data = {'note': note}
+        response = self.api_client.patch(url, data=request_data)
+        assert response.status_code == status.HTTP_200_OK
+
+        assert Version.objects.get_for_object(investment_project).count() == 1
+        version = Version.objects.get_for_object(investment_project).first()
+        assert version.revision.user == self.user
+        assert version.revision.get_comment() == note
+        assert version.field_dict['name'] == 'project name'
+
+    @freeze_time(datetime(2017, 4, 28, 17, 35, tzinfo=utc))
+    def test_request_a_project_manager(self):
+        """
+
+        """
+        investment_project = InvestmentProjectFactory(
+            name='project name',
+            project_manager_first_requested_on=None,
+            project_manager_request_status=None,
+        )
+        url = reverse('api-v3:investment:investment-item', kwargs={'pk': investment_project.pk})
+
+        pm_requested_id = ProjectManagerRequestStatus.requested.value.id
+        request_data = {
+            'project_manager_request_status': {'id': pm_requested_id}
+        }
+        response = self.api_client.patch(url, data=request_data)
+        assert response.status_code == status.HTTP_200_OK
+
+        response_data = response.json()
+        assert response_data['project_manager_request_status']['id'] == pm_requested_id
+        assert response_data['project_manager_request_status']['name'] == 'requested'
+
+        investment_project.refresh_from_db()
+        requested_on = datetime(2017, 4, 28, 17, 35, tzinfo=utc)
+        assert investment_project.project_manager_first_requested_on == requested_on
+
+
+    @freeze_time(datetime(2017, 4, 28, 17, 35, tzinfo=utc))
+    def test_request_a_project_manager_when_one_already_assigned(self):
+        """
+
+        """
+        investment_project = InvestmentProjectFactory(
+            name='project name',
+            project_manager_first_requested_on=None,
+            project_manager_request_status=None,
+        )
+        url = reverse('api-v3:investment:investment-item', kwargs={'pk': investment_project.pk})
+
+        pm_requested_id = ProjectManagerRequestStatus.requested.value.id
+        request_data = {
+            'project_manager_request_status': {'id': pm_requested_id}
+        }
+        response = self.api_client.patch(url, data=request_data)
+        assert response.status_code == status.HTTP_200_OK
+
+        response_data = response.json()
+        assert response_data['project_manager_request_status']['id'] == pm_requested_id
+        assert response_data['project_manager_request_status']['name'] == 'requested'
+
+        investment_project.refresh_from_db()
+        requested_on = datetime(2017, 4, 28, 17, 35, tzinfo=utc)
+        assert investment_project.project_manager_first_requested_on == requested_on
+        assert 1 == 'fix tests'
+
+    @freeze_time(datetime(2017, 4, 28, 17, 35, tzinfo=utc))
+    def test_reject_a_project_manager_without_a_note_failure(self):
+        """
+
+        """
+        pm_requested_id = ProjectManagerRequestStatus.requested.value.id
+        pm_rejected_id = ProjectManagerRequestStatus.rejected.value.id
+        investment_project = InvestmentProjectFactory(
+            name='project name',
+            project_manager_request_status_id=pm_requested_id,
+        )
+        url = reverse('api-v3:investment:investment-item', kwargs={'pk': investment_project.pk})
+
+        request_data = {
+            'project_manager_request_status': {'id': pm_rejected_id}
+        }
+        response = self.api_client.patch(url, data=request_data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+        response_data = response.json()
+        assert response_data['project_manager_request_status'] == [
+            'An accompanying note is required when marking a project manager request as rejected.'
+        ]
+        assert response_data['note'] == ['This field is required.']
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def test_change_stage_active_failure(self):
         """Tests moving an incomplete project to the Active stage."""

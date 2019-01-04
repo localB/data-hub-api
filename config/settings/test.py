@@ -78,3 +78,6 @@ DOCUMENT_BUCKETS = {
         'aws_region': 'eu-west-2',
     }
 }
+
+
+TEST_ES_SERVER='http://es:9200'
