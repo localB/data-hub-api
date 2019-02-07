@@ -43,7 +43,14 @@ def get_suggestions(db_company):
         *names,
     ]
 
-    return list(filter(None, set(data)))
+    countries = [
+        getattr(db_company.registered_address_country, 'name', None),
+        getattr(db_company.trading_address_country, 'name', None),
+    ]
+    countries = list(filter(None, set(countries)))
+    print(countries)
+
+    return {'input': list(filter(None, set(data))), 'contexts': {'country': countries}}
 
 
 class Company(BaseESModel):
@@ -110,7 +117,7 @@ class Company(BaseESModel):
     vat_number = Keyword(index=False)
     duns_number = Keyword()
     website = Text()
-    suggest = Completion()
+    suggest = Completion(contexts=[{'name': 'country', 'type': 'category'}])
 
     COMPUTED_MAPPINGS = {
         'trading_name': lambda obj: dict_utils.company_dict(obj)['trading_name'],
