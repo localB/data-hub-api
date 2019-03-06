@@ -13,7 +13,7 @@ from datahub.interaction.models import (
     PolicyIssueType,
     ServiceDeliveryStatus,
 )
-from datahub.investment.test.factories import InvestmentProjectFactory
+from datahub.investment.projects.test.factories import InvestmentProjectFactory
 
 
 class InteractionFactoryBase(factory.django.DjangoModelFactory):

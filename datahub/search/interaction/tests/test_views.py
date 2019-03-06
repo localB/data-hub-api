@@ -39,7 +39,7 @@ from datahub.interaction.test.factories import (
     InvestmentProjectInteractionFactory,
     ServiceDeliveryFactory,
 )
-from datahub.investment.test.factories import ActiveInvestmentProjectFactory
+from datahub.investment.projects.test.factories import ActiveInvestmentProjectFactory
 from datahub.metadata.models import Sector
 from datahub.metadata.test.factories import TeamFactory
 from datahub.search.interaction.views import SearchInteractionExportAPIView
@@ -1055,9 +1055,10 @@ class TestInteractionExportView(APITestMixin):
 
 
 def _format_expected_contacts(interaction):
-    formatted_contact_names = sorted(
-        _format_expected_contact_name(contact) for contact in interaction.contacts.all(),
-    )
+    formatted_contact_names = [
+        _format_expected_contact_name(contact) for contact in interaction.contacts.all()
+    ]
+    formatted_contact_names = sorted(formatted_contact_names)
     return ', '.join(formatted_contact_names)
 
 

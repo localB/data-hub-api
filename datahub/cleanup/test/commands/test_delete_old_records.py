@@ -37,9 +37,9 @@ from datahub.interaction.test.factories import (
     CompanyInteractionFactory,
     InvestmentProjectInteractionFactory,
 )
-from datahub.investment.evidence.test.factories import EvidenceDocumentFactory
-from datahub.investment.proposition.test.factories import PropositionFactory
-from datahub.investment.test.factories import InvestmentProjectFactory
+from datahub.investment.projects.evidence.test.factories import EvidenceDocumentFactory
+from datahub.investment.projects.proposition.test.factories import PropositionFactory
+from datahub.investment.projects.test.factories import InvestmentProjectFactory
 from datahub.omis.order.test.factories import OrderFactory
 from datahub.omis.payment.test.factories import (
     ApprovedRefundFactory,

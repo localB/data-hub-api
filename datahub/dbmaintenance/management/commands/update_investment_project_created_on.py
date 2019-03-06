@@ -3,7 +3,7 @@ from dateutil.parser import parse as dateutil_parse
 from django.utils.timezone import utc
 
 from datahub.dbmaintenance.management.base import CSVBaseCommand
-from datahub.investment.models import InvestmentProject
+from datahub.investment.projects.models import InvestmentProject
 
 
 class Command(CSVBaseCommand):

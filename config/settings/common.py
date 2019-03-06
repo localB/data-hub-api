@@ -67,9 +67,10 @@ LOCAL_APPS = [
     'datahub.event',
     'datahub.feature_flag.apps.FeatureFlagConfig',
     'datahub.interaction',
-    'datahub.investment',
-    'datahub.investment.evidence',
-    'datahub.investment.proposition',
+    'datahub.investment.projects.apps.InvestmentConfig',
+    'datahub.investment.projects.evidence.apps.InvestmentEvidenceConfig',
+    'datahub.investment.projects.proposition.apps.InvestmentPropositionConfig',
+    'datahub.investment.projects.report.apps.InvestmentReportConfig',
     'datahub.metadata',
     'datahub.oauth',
     'datahub.admin_report',
@@ -86,7 +87,6 @@ LOCAL_APPS = [
     'datahub.omis.invoice',
     'datahub.omis.payment',
     'datahub.activity_stream.apps.ActivityStreamConfig',
-    'datahub.investment.report',
     'datahub.user_event_log',
 
     # TODO: delete after the whole data cleansing piece of work is complete

@@ -9,9 +9,9 @@ from datahub.core.constants import SectorCluster
 from datahub.core.query_utils import (
     get_choices_as_case_expression,
 )
-from datahub.investment.constants import Involvement
-from datahub.investment.models import InvestmentProject
-from datahub.investment.test.factories import InvestmentProjectFactory
+from datahub.investment.projects.constants import Involvement
+from datahub.investment.projects.models import InvestmentProject
+from datahub.investment.projects.test.factories import InvestmentProjectFactory
 from datahub.metadata.query_utils import get_sector_name_subquery
 from datahub.metadata.test.factories import SectorFactory
 from datahub.mi_dashboard.constants import NO_SECTOR_CLUSTER_ASSIGNED

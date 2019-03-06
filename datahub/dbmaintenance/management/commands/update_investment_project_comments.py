@@ -1,7 +1,7 @@
 import reversion
 
 from datahub.dbmaintenance.management.base import CSVBaseCommand
-from datahub.investment.models import InvestmentProject
+from datahub.investment.projects.models import InvestmentProject
 
 
 class Command(CSVBaseCommand):

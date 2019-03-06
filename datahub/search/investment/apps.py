@@ -1,11 +1,11 @@
 from django.db.models import Prefetch
 
-from datahub.investment.models import (
+from datahub.investment.projects.models import (
     InvestmentProject as DBInvestmentProject,
     InvestmentProjectPermission,
     InvestmentProjectTeamMember,
 )
-from datahub.investment.permissions import (
+from datahub.investment.projects.permissions import (
     get_association_filters,
     InvestmentProjectAssociationChecker,
 )

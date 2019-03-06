@@ -26,9 +26,9 @@ from datahub.core.test_utils import (
     join_attr_values,
     random_obj_for_queryset,
 )
-from datahub.investment.constants import Involvement, LikelihoodToLand
-from datahub.investment.models import InvestmentProject, InvestmentProjectPermission
-from datahub.investment.test.factories import (
+from datahub.investment.projects.constants import Involvement, LikelihoodToLand
+from datahub.investment.projects.models import InvestmentProject, InvestmentProjectPermission
+from datahub.investment.projects.test.factories import (
     InvestmentProjectFactory,
     InvestmentProjectTeamMemberFactory,
     VerifyWinInvestmentProjectFactory,
