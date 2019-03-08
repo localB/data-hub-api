@@ -1,3 +1,5 @@
+from django_filters.rest_framework import DjangoFilterBackend
+
 from datahub.core.viewsets import CoreViewSet
 from datahub.feature_flag.utils import feature_flagged_view
 from datahub.investment.investor_profile.constants import (
@@ -15,6 +17,8 @@ class LargeCapitalInvestorProfileViewSet(CoreViewSet):
     required_scopes = (Scope.internal_front_end,)
     serializer_class = LargeCapitalInvestorProfileSerializer
     profile_type_id = ProfileTypeConstant.large.value.id
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('investor_company',)
 
     def get_queryset(self):
         """Returns only large capital investor profile queryset."""
