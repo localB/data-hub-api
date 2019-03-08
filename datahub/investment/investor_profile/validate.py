@@ -1,6 +1,6 @@
 from datahub.core.validate_utils import DataCombiner
 from datahub.investment.investor_profile.models import InvestorProfile
-from datahub.investment.project.validate import field_incomplete
+from datahub.investment.validate import field_incomplete
 
 
 def get_incomplete_fields(instance, fields):
