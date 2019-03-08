@@ -8,4 +8,5 @@ class InvestorProfileAdmin(admin.ModelAdmin):
     """Investor profile admin."""
 
     list_display = ('investor_company', 'profile_type')
-    search_fields = ('investor_company', 'pk')
+    search_fields = ('investor_company__name', 'id')
+    readonly_fields = ('id', 'created_by', 'modified_by')
