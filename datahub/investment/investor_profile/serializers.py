@@ -190,13 +190,12 @@ class LargeCapitalInvestorProfileSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Investor company can not be updated',
             )
-
-        profile_id = getattr(self.instance, 'id', None)
-        if value.investor_profiles.filter(
+        queryset = value.investor_profiles.filter(
             profile_type_id=ProfileTypeConstant.large.value.id,
-        ).exclude(
-            id=profile_id,
-        ).exists():
+        )
+        if self.instance:
+            queryset = queryset.exclude(id=self.instance.id)
+        if queryset.exists():
             raise serializers.ValidationError(
                 'Investor company already has large capital investor profile',
             )
