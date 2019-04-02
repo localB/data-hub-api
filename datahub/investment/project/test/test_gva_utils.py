@@ -7,6 +7,7 @@ from datahub.core.constants import (
     InvestmentType as InvestmentTypeConstant,
     Sector as SectorConstant,
 )
+from datahub.investment.project.gva_utils import get_gross_value_added_message
 from datahub.investment.project.test.factories import (
     GVAMultiplierFactory,
     InvestmentProjectFactory,
@@ -168,3 +169,85 @@ class TestGrossValueAddedCalculator:
             )
 
         assert project.gross_value_added == expected_gross_value_added
+
+
+class TestGrossValueAddedMessage:
+    """Tests for get Gross Value Added message."""
+
+    def test_gross_value_added_message_for_none_fdi_project(self):
+        """Test no message is returned for an FDI project."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.non_fdi.value.id,
+        )
+        assert not get_gross_value_added_message(project)
+
+    def test_gross_value_added_message_when_gross_value_added_is_set(self):
+        """Test no message is returned if the project has a GVA."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            foreign_equity_investment=1000,
+            sector_id=SectorConstant.renewable_energy_wind.value.id,
+        )
+        project.gross_value_added = 100
+        assert not get_gross_value_added_message(project)
+
+    def test_gross_value_added_message_when_no_foreign_equity_investment(self):
+        """Tests a message is returned when the project has no value for foreign equity."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            sector_id=SectorConstant.renewable_energy_wind.value.id,
+        )
+        assert (
+            str(get_gross_value_added_message(project))
+            == 'Add Foreign equity investment value and click "Save" to calculate GVA'
+        )
+
+    def test_gross_value_added_message_when_client_cannot_provide_foreign_investment(self):
+        """Tests no message is returned when the client cannot provide foreign investment."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            sector_id=SectorConstant.renewable_energy_wind.value.id,
+            client_cannot_provide_foreign_investment=True,
+        )
+        assert not get_gross_value_added_message(project)
+
+    def test_gross_value_added_message_when_no_sector(self):
+        """Tests a message is returned when there is no sector assigned."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            foreign_equity_investment=1000,
+            sector_id=None,
+            business_activities=[],
+        )
+        assert (
+            str(get_gross_value_added_message(project))
+            == 'Add Primary sector (investment project summary) to calculate GVA'
+        )
+
+    def test_gross_value_added_message_when_no_sector_and_no_foreign_equity_investment(self):
+        """Tests a message is returned when there is no sector and no foreign equity investment."""
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            sector_id=None,
+        )
+        assert (
+            str(get_gross_value_added_message(project))
+            == (
+                'Add Foreign equity investment value and Primary sector '
+                '(investment project summary) to calculate GVA'
+            )
+        )
+
+    def test_gross_value_added_message_when_gross_value_added_not_populated(self):
+        """
+        Tests no message is returned when all criteria has been meet
+        but no gross value added value.
+        """
+        project = InvestmentProjectFactory(
+            investment_type_id=InvestmentTypeConstant.fdi.value.id,
+            foreign_equity_investment=1000,
+            sector_id=SectorConstant.renewable_energy_wind.value.id,
+            business_activities=[],
+        )
+        project.gross_value_added = None
+        assert not get_gross_value_added_message(project)

@@ -139,6 +139,7 @@ class TestListView(APITestMixin):
             'foreign_equity_investment',
             'government_assistance',
             'gross_value_added',
+            'gross_value_added_message',
             'some_new_jobs',
             'number_new_jobs',
             'will_new_jobs_last_two_years',

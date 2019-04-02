@@ -1,4 +1,5 @@
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy
 
 from datahub.core.constants import (
     InvestmentBusinessActivity as InvestmentBusinessActivityConstant,
@@ -111,3 +112,38 @@ def update_gross_value_added_for_investment_project(investment_project):
     if gross_value_added != investment_project.gross_value_added:
         investment_project.gross_value_added = calculate_gross_value_added.gross_value_added
     return investment_project
+
+
+def get_gross_value_added_message(investment_project):
+    """
+    Evaluate a investment project and return a reason wny gross value added is not populated.
+
+    1/4/2019 This is temporary till the FE investment project design has been updated as this
+    should ideally be worked out by the frontend.
+    """
+    if investment_project.gross_value_added:
+        return None
+
+    if str(investment_project.investment_type_id) != InvestmentTypeConstant.fdi.value.id:
+        return None
+
+    if investment_project.client_cannot_provide_foreign_investment:
+        return None
+
+    if not investment_project.foreign_equity_investment and not investment_project.sector:
+        return gettext_lazy(
+            'Add Foreign equity investment value and Primary sector '
+            '(investment project summary) to calculate GVA',
+        )
+
+    if not investment_project.foreign_equity_investment:
+        return gettext_lazy(
+            'Add Foreign equity investment value and click "Save" to calculate GVA',
+        )
+
+    if not investment_project.sector:
+        return gettext_lazy(
+            'Add Primary sector (investment project summary) to calculate GVA',
+        )
+
+    return None

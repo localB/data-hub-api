@@ -18,6 +18,7 @@ from datahub.investment.project.constants import (
     InvestmentActivityType as InvestmentActivityTypeValue,
     ProjectManagerRequestStatus as ProjectManagerRequestStatusValue,
 )
+from datahub.investment.project.gva_utils import get_gross_value_added_message
 from datahub.investment.project.models import (
     InvestmentActivity,
     InvestmentActivityType,
@@ -33,6 +34,7 @@ from datahub.investment.project.models import (
     SpecificProgramme,
 )
 from datahub.investment.project.validate import REQUIRED_MESSAGE, validate
+
 
 CORE_FIELDS = (
     'id',
@@ -92,6 +94,7 @@ CORE_FIELDS = (
     'level_of_involvement_simplified',
     'note',
     'gross_value_added',
+    'gross_value_added_message',
 )
 
 VALUE_FIELDS = (
@@ -339,6 +342,7 @@ class IProjectSerializer(PermittedFieldsModelSerializer, NoteAwareModelSerialize
         InvestmentProject, required=False, allow_null=True, extra_fields=('name', 'project_code'),
     )
     gross_value_added = serializers.ReadOnlyField()
+    gross_value_added_message = serializers.SerializerMethodField()
 
     # Requirements fields
     competitor_countries = NestedRelatedField(meta_models.Country, many=True, required=False)
@@ -499,6 +503,15 @@ class IProjectSerializer(PermittedFieldsModelSerializer, NoteAwareModelSerialize
             and new_status == InvestmentProject.STATUSES.won
         ):
             data['status'] = InvestmentProject.STATUSES.ongoing
+
+    def get_gross_value_added_message(self, instance):
+        """
+        Get Gross Value Added message.
+
+        When GVA cannot be calculated a message is returned to inform the user of the reasons why.
+        This is only temporary as this logic should be in the FE.
+        """
+        return get_gross_value_added_message(instance)
 
     class Meta:
         model = InvestmentProject
