@@ -1,11 +1,18 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.fields import JSONField
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from model_utils import Choices
 
 from datahub.core import reversion
-from datahub.core.models import BaseConstantModel, BaseModel, BaseOrderedConstantModel
+from datahub.core.models import (
+    ArchivableModel,
+    BaseConstantModel,
+    BaseModel,
+    BaseOrderedConstantModel,
+)
 from datahub.core.utils import get_front_end_url, StrEnum
 
 MAX_LENGTH = settings.CHAR_FIELD_MAX_LENGTH
@@ -120,7 +127,7 @@ class InteractionDITParticipant(models.Model):
 
 
 @reversion.register_base_model()
-class Interaction(BaseModel):
+class Interaction(ArchivableModel, BaseModel):
     """Interaction."""
 
     KINDS = Choices(
@@ -128,8 +135,33 @@ class Interaction(BaseModel):
         ('service_delivery', 'Service delivery'),
     )
 
+    STATUSES = Choices(
+        ('draft', 'Draft'),
+        ('complete', 'Complete'),
+    )
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     kind = models.CharField(max_length=MAX_LENGTH, choices=KINDS)
+    # TODO: Remove this override (the field is provided with a default by ArchivableModel)
+    # once we have ensured that a default value False is set on
+    # all existing Interactions and we have ensured that new interactions are
+    # being created with archived=False
+    archived = models.BooleanField(blank=True, null=True)
+    # TODO: Ensure that this is required (with default="complete")
+    # once we have ensured that a default value "complete" is set on
+    # all existing Interactions and we have ensured that new interactions are
+    # being created with a state
+    status = models.CharField(
+        max_length=MAX_LENGTH,
+        choices=STATUSES,
+        null=True,
+        blank=True,
+    )
+    # If source is set, it provides details of an external source that this
+    # interaction represents.  e.g. a calendar event
+    # {'id': 'abc123', 'type': 'calendar'}
+    source = JSONField(encoder=DjangoJSONEncoder, blank=True, null=True)
+    location = models.CharField(max_length=MAX_LENGTH, blank=True, null=True)
     date = models.DateTimeField()
     company = models.ForeignKey(
         'company.Company',
@@ -188,14 +220,6 @@ class Interaction(BaseModel):
         on_delete=models.SET_NULL,
         help_text='For interactions only.',
     )
-    investment_project = models.ForeignKey(
-        'investment.InvestmentProject',
-        related_name='%(class)ss',
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        help_text='For interactions only.',
-    )
     archived_documents_url_path = models.CharField(
         max_length=MAX_LENGTH, blank=True,
         help_text='Legacy field. File browser path to the archived documents for this '
@@ -206,6 +230,15 @@ class Interaction(BaseModel):
         verbose_name='status',
         help_text='For service deliveries only.',
     )
+    # Investments
+    investment_project = models.ForeignKey(
+        'investment.InvestmentProject',
+        related_name='%(class)ss',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        help_text='For interactions only.',
+    )
     grant_amount_offered = models.DecimalField(
         null=True, blank=True, max_digits=19, decimal_places=2,
         help_text='For service deliveries only.',
@@ -214,6 +247,7 @@ class Interaction(BaseModel):
         null=True, blank=True, max_digits=19, decimal_places=2,
         help_text='For service deliveries only.',
     )
+    # Policy feedback
     was_policy_feedback_provided = models.BooleanField()
     policy_areas = models.ManyToManyField(
         'PolicyArea',

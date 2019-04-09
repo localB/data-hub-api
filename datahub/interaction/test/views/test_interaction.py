@@ -82,6 +82,10 @@ class TestAddInteraction(APITestMixin):
             {
                 'notes': 'hello',
             },
+            # meeting interaction with a status
+            {
+                'status': Interaction.STATUSES.draft,
+            },
             # investment project interaction
             {
                 'investment_project': InvestmentProjectFactory,
@@ -129,6 +133,7 @@ class TestAddInteraction(APITestMixin):
         assert response_data == {
             'id': response_data['id'],
             'kind': Interaction.KINDS.interaction,
+            'status': request_data.get('status', Interaction.STATUSES.complete),
             'is_event': None,
             'service_delivery_status': None,
             'grant_amount_offered': None,
@@ -202,6 +207,12 @@ class TestAddInteraction(APITestMixin):
             },
             'created_on': '2017-04-18T13:25:30.986208Z',
             'modified_on': '2017-04-18T13:25:30.986208Z',
+            'location': '',
+            'archived': False,
+            'archived_by': None,
+            'archived_on': None,
+            'archived_reason': None,
+            'source': None,
         }
 
     @pytest.mark.parametrize(
@@ -217,8 +228,26 @@ class TestAddInteraction(APITestMixin):
                     'date': ['This field is required.'],
                     'subject': ['This field is required.'],
                     'company': ['This field is required.'],
-                    'service': ['This field is required.'],
                     'was_policy_feedback_provided': ['This field is required.'],
+                },
+            ),
+
+            # service required for complete interaction
+            # required fields
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_adviser': AdviserFactory,
+                    'dit_team': Team.healthcare_uk.value.id,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+                },
+                {
+                    'service': ['This field is required.'],
                 },
             ),
 
@@ -397,6 +426,23 @@ class TestAddInteraction(APITestMixin):
                     },
                 },
             ),
+
+            # status must be a valid choice
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'service': Service.trade_enquiry.value.id,
+                    'was_policy_feedback_provided': False,
+                    'status': 'foobar',
+                },
+                {
+                    'status': ['"foobar" is not a valid choice.'],
+                },
+            ),
         ),
     )
     def test_validation(self, data, errors):
@@ -543,6 +589,8 @@ class TestGetInteraction(APITestMixin):
         assert response_data == {
             'id': response_data['id'],
             'kind': Interaction.KINDS.interaction,
+            # TODO: Change this once we give status a default
+            'status': None,
             'is_event': None,
             'service_delivery_status': None,
             'grant_amount_offered': None,
@@ -628,6 +676,13 @@ class TestGetInteraction(APITestMixin):
             },
             'created_on': '2017-04-18T13:25:30.986208Z',
             'modified_on': '2017-04-18T13:25:30.986208Z',
+            'location': None,
+            # TODO: Change this once we enforce a default
+            'archived': None,
+            'archived_by': None,
+            'archived_on': None,
+            'archived_reason': None,
+            'source': None,
         }
 
     @freeze_time('2017-04-18 13:25:30.986208')
@@ -649,6 +704,8 @@ class TestGetInteraction(APITestMixin):
         assert response_data == {
             'id': response_data['id'],
             'kind': Interaction.KINDS.interaction,
+            # TODO: Change this once we give status a default
+            'status': None,
             'is_event': None,
             'service_delivery_status': None,
             'grant_amount_offered': None,
@@ -724,6 +781,13 @@ class TestGetInteraction(APITestMixin):
             },
             'created_on': '2017-04-18T13:25:30.986208Z',
             'modified_on': '2017-04-18T13:25:30.986208Z',
+            'location': None,
+            # TODO: Change this once we enforce a default
+            'archived': None,
+            'archived_by': None,
+            'archived_on': None,
+            'archived_reason': None,
+            'source': None,
         }
 
     def test_restricted_user_cannot_get_non_associated_investment_project_interaction(self):
