@@ -1,0 +1,30 @@
+- model: uk_opportunity.largecapitalukopportunitystatus
+  pk: 58937bae-0b98-40ef-9d43-36a68e33c288
+  fields:
+    disabled_on: null
+    name: Abandoned
+    order: 500
+- model: uk_opportunity.largecapitalukopportunitystatus
+  pk: 9f483df7-e05a-4970-af37-6548a1e4e4ad
+  fields:
+    disabled_on: null
+    name: Part funded
+    order: 200
+- model: uk_opportunity.largecapitalukopportunitystatus
+  pk: c05f6b48-2dfc-4e11-b700-bd1c0488e9b5
+  fields:
+    disabled_on: null
+    name: Suspended
+    order: 400
+- model: uk_opportunity.largecapitalukopportunitystatus
+  pk: cde6c4b5-092f-47f3-9af7-5625868dbbae
+  fields:
+    disabled_on: null
+    name: Fully funded
+    order: 300
+- model: uk_opportunity.largecapitalukopportunitystatus
+  pk: fa2d3c77-66db-42ed-98e4-af974fe83986
+  fields:
+    disabled_on: null
+    name: Seeking investment
+    order: 100

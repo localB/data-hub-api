@@ -13,6 +13,7 @@ from datahub.feature_flag import urls as feature_flag_urls
 from datahub.interaction import urls as interaction_urls
 from datahub.investment.investor_profile import urls as investor_profile_urls
 from datahub.investment.project import urls as investment_urls
+from datahub.investment.uk_opportunity import urls as uk_opportunity_urls
 from datahub.omis import urls as omis_urls
 from datahub.search import urls as search_urls
 
@@ -65,6 +66,13 @@ v4_urls = [
         include(
             (investor_profile_urls, 'large-investor-profile'),
             namespace='large-investor-profile',
+        ),
+    ),
+    path(
+        '',
+        include(
+            (uk_opportunity_urls, 'large-capital-uk-opportunity'),
+            namespace='uk-opportunity',
         ),
     ),
 ]

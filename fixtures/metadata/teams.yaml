@@ -77,6 +77,18 @@
     - - view_investorprofile
       - investor_profile
       - investorprofile
+    - - add_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - change_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - delete_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - view_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
   model: auth.group
 - fields:
     name: DA
@@ -207,6 +219,18 @@
     - - view_investorprofile
       - investor_profile
       - investorprofile
+    - - add_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - change_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - delete_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - view_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
   model: auth.group
 - fields:
     name: DIT_staff
@@ -391,6 +415,18 @@
     - - export_investorprofile
       - investor_profile
       - investorprofile
+    - - add_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - change_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - delete_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
+    - - view_largecapitalukopportunity
+      - uk_opportunity
+      - largecapitalukopportunity
   model: auth.group
 
 
