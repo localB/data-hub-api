@@ -63,6 +63,7 @@ LOCAL_APPS = [
     'datahub.core',
     'datahub.company',
     'datahub.documents',
+    'datahub.email_ingestion',
     'datahub.event',
     'datahub.feature_flag.apps.FeatureFlagConfig',
     'datahub.interaction',
@@ -383,6 +384,12 @@ if REDIS_BASE_URL:
             'schedule': crontab(minute=0, hour=1),
         }
 
+    if env.bool('ENABLE_EMAIL_INGESTION', False):
+        CELERY_BEAT_SCHEDULE['email_ingestion'] = {
+            'task': 'datahub.email_ingestion.tasks.ingest_emails',
+            'schedule': 10.0,
+        }
+
     CELERY_WORKER_LOG_FORMAT = (
         "[%(asctime)s: %(levelname)s/%(processName)s] [%(name)s] %(message)s"
     )
@@ -522,14 +529,12 @@ DOCUMENT_BUCKETS = {
 }
 
 MAILBOXES = {
-    # Illustrative example...
-    # TODO: remove this when we have a real mailbox
-    #"meetings": {
-    #    "email": env("MAILBOX_MEETINGS_EMAIL", default=''),
-    #    "password": env("MAILBOX_MEETINGS_PASSWORD", default=''),
-    #    "imap_domain": env("MAILBOX_MEETINGS_IMAP_DOMAIN", default=''),
-    #    "processor_classes": [
-    #        "datahub.interaction.email_processors.CalendarInteractionEmailProcessor",
-    #    ],
-    #},
+    "meetings": {
+        "email": env("MAILBOX_MEETINGS_EMAIL", default=''),
+        "password": env("MAILBOX_MEETINGS_PASSWORD", default=''),
+        "imap_domain": env("MAILBOX_MEETINGS_IMAP_DOMAIN", default=''),
+        "processor_classes": [
+            "datahub.interaction.email_processors.CalendarInteractionEmailProcessor",
+        ],
+    },
 }
