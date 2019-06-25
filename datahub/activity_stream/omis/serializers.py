@@ -13,10 +13,11 @@ class OMISOrderAddedSerializer(ActivitySerializer):
         """
         order_id = f'dit:DataHubOMISOrder:{instance.pk}'
         order = {
-            'id': f'{order_id}:Add',
-            'type': 'Add',
+            'id': f'{order_id}:{instance.event_status}',
+            'type': f'{instance.event_status}',
             'published': instance.created_on,
             'generator': self._get_generator(),
+            'eventDatetime': instance.event_datetime,
             'object': {
                 'id': order_id,
                 'type': [f'dit:OMISOrder'],

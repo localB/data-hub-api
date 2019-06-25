@@ -1,10 +1,11 @@
+import pprint
 import pytest
 from rest_framework import status
 
 from datahub.activity_stream.tests import hawk
 from datahub.activity_stream.tests.utils import get_url
 from datahub.core.test_utils import format_date_or_datetime
-from datahub.omis.order.test.factories import OrderFactory
+from datahub.omis.order.test.factories import OrderCompleteFactory
 
 
 @pytest.mark.parametrize(
@@ -22,7 +23,7 @@ def test_omis_order_added_activity(api_client, order_overrides):
     Get a list of OMIS Orders added and test the JSON returned is valid as per:
     https://www.w3.org/TR/activitystreams-core/
     """
-    order = OrderFactory(**order_overrides)
+    order = OrderCompleteFactory(**order_overrides)
     response = hawk.get(api_client, get_url('api-v3:activity-stream:omis-order-added'))
     assert response.status_code == status.HTTP_200_OK
 
@@ -86,4 +87,5 @@ def test_omis_order_added_activity(api_client, order_overrides):
             'name': order.uk_region.name,
         }
 
+    pprint.pprint(response.json())
     assert response.json() == expected_data
