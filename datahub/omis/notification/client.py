@@ -7,8 +7,13 @@ from django.conf import settings
 from notifications_python_client.notifications import NotificationsAPIClient
 
 from datahub.core.thread_pool import submit_to_thread_pool
+from datahub.feature_flag.utils import is_feature_flag_active
+from datahub.notification.notify import notify_by_email
 from datahub.omis.market.models import Market
-from datahub.omis.notification.constants import Template
+from datahub.omis.notification.constants import (
+    OMIS_USE_NOTIFICATION_APP_FEATURE_FLAG_NAME,
+    Template,
+)
 from datahub.omis.region.models import UKRegionalSettings
 
 
@@ -17,13 +22,7 @@ logger = getLogger(__name__)
 
 def send_email(client, **kwargs):
     """Send email and catch potential errors."""
-    data = dict(kwargs)
-
-    # override recipient if needed
-    if settings.OMIS_NOTIFICATION_OVERRIDE_RECIPIENT_EMAIL:
-        data['email_address'] = settings.OMIS_NOTIFICATION_OVERRIDE_RECIPIENT_EMAIL
-
-    client.send_email_notification(**data)
+    client.send_email_notification(**kwargs)
 
 
 class Notify:
@@ -57,7 +56,22 @@ class Notify:
 
     def _send_email(self, **kwargs):
         """Send email in a separate thread."""
-        submit_to_thread_pool(send_email, self.client, **kwargs)
+        data = dict(kwargs)
+
+        # override recipient if needed
+        if settings.OMIS_NOTIFICATION_OVERRIDE_RECIPIENT_EMAIL:
+            data['email_address'] = settings.OMIS_NOTIFICATION_OVERRIDE_RECIPIENT_EMAIL
+
+        use_notification_app = is_feature_flag_active(OMIS_USE_NOTIFICATION_APP_FEATURE_FLAG_NAME)
+        if use_notification_app:
+            notify_by_email(
+                data['email_address'],
+                data['template_id'],
+                data.get('personalisation', None),
+                'omis',
+            )
+        else:
+            submit_to_thread_pool(send_email, self.client, **data)
 
     def _prepare_personalisation(self, order, data=None):
         """Prepare the personalisation data with common values."""
