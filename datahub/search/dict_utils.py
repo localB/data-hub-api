@@ -129,7 +129,12 @@ def _computed_nested_dict(nested_field, dict_func):
         if related_object is None:
             return None
 
-        field = getattr(related_object, fields[1])
+        field_name = fields[1]
+        if field_name.endswith('()'):
+            field = getattr(related_object, field_name[:-2])()
+
+        else:
+            field = getattr(related_object, fields[1])
         if field is None:
             return None
 
