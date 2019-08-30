@@ -47,6 +47,7 @@ class Interaction(BaseESModel):
     id = Keyword()
     company = fields.company_field()
     company_sector = fields.sector_field()
+    company_one_list_tier = fields.id_name_field()
     communication_channel = fields.id_name_field()
     contacts = _contact_field()
     created_on = Date()
@@ -75,6 +76,7 @@ class Interaction(BaseESModel):
     MAPPINGS = {
         'company': dict_utils.company_dict,
         'communication_channel': dict_utils.id_name_dict,
+        'company_one_list_tier': dict_utils.id_name_dict,
         'contacts': dict_utils.contact_or_adviser_list_of_dicts,
         'dit_participants': _dit_participant_list,
         'event': dict_utils.id_name_dict,

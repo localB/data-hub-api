@@ -92,6 +92,7 @@ class Company(BaseESModel):
     )
     reference_code = fields.NormalizedKeyword()
     sector = fields.sector_field()
+    one_list_tier = fields.id_name_field()
     address = fields.address_field()
     registered_address = fields.address_field()
     trading_names = fields.TextWithTrigram()
@@ -126,6 +127,7 @@ class Company(BaseESModel):
         'global_headquarters': dict_utils.id_name_dict,
         'headquarter_type': dict_utils.id_name_dict,
         'sector': dict_utils.sector_dict,
+        'one_list_tier': dict_utils.id_name_dict,
 
         'turnover_range': dict_utils.id_name_dict,
         'uk_based': bool,
