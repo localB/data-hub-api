@@ -288,30 +288,14 @@ class Company(ArchivableModel, BaseModel):
     def get_active_future_export_countries(self):
         """
         Get a list of unique countries for which there are active (non-deleted)
-        CompanyExportCountr
-        y Objects
+        CompanyExportCountry Objects
         """
-        if (
-            hasattr(self, '_prefetched_objects_cache')
-            and 'unfiltered_export_countries' in self._prefetched_objects_cache
-        ):
-            # If unfiltered_export_countries has been prefetched, we assume
-            # that unfiltered_export_countries__country has been as well.
-            # If it hasn't then the below will cause N queries to get each country.
-            return sorted([
-                cec.country
-                for cec
-                in self.unfiltered_export_countries.all()
-                if not cec.disabled
-            ], key=lambda c: c.id)
-        else:
-            # An optimised query to get the countries in the case where
-            # the necessary prefetches have not been made.
-            return list(metadata_models.Country.objects.filter(
-                id__in=self.unfiltered_export_countries.filter(
-                    disabled_on=None,
-                ).values_list('country_id'),
-            ).order_by('id'))
+        return sorted([
+            cec.country
+            for cec
+            in self.unfiltered_export_countries.all()
+            if not cec.disabled
+        ], key=lambda c: c.id)
 
     @transaction.atomic
     def set_user_edited_export_countries(self, user, countries):
