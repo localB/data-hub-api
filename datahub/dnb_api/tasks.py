@@ -1,3 +1,5 @@
+import random, time
+
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from rest_framework.status import is_server_error
@@ -44,3 +46,24 @@ def sync_company_with_dnb(self, company_id, fields_to_update=None):
     will be synced.
     """
     _sync_company_with_dnb(company_id, fields_to_update, self)
+
+
+@shared_task(
+    acks_late=True,
+    priority=9,
+)
+def mock_task(some_id, fields_to_update=[]):
+    pass
+
+
+@shared_task(
+    acks_late=True,
+)
+def spawn_countdown_tasks(call_rate=1, task_count=1000):
+    """
+    """
+    for index in range(task_count):
+        mock_task.apply_async(
+            countdown=(call_rate * index),
+            args=('7bad8082-4978-4fe8-a018-740257f01637', ['name', 'global_ultimate_duns_number', 'address']),
+        )
