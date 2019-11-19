@@ -34,6 +34,7 @@ from datahub.interaction.test.permissions import (
 from datahub.interaction.test.views.utils import resolve_data
 from datahub.investment.project.test.factories import InvestmentProjectFactory
 from datahub.metadata.test.factories import TeamFactory
+from datahub.metadata.models import Country
 
 
 class TestAddInteraction(APITestMixin):
@@ -127,6 +128,9 @@ class TestAddInteraction(APITestMixin):
                 request_data.get('policy_issue_types', []),
             'was_policy_feedback_provided':
                 request_data.get('was_policy_feedback_provided', False),
+            'was_a_country_discussed': request_data.get('was_a_country_discussed', False),
+            'country_of_export': request_data.get('country_of_export', None),
+            'export_interest_category': request_data.get('export_interest_category', None),
             'communication_channel': {
                 'id': str(communication_channel.pk),
                 'name': communication_channel.name,
@@ -662,6 +666,9 @@ class TestGetInteraction(APITestMixin):
                 } for policy_issue_type in interaction.policy_issue_types.all()
             ],
             'was_policy_feedback_provided': interaction.was_policy_feedback_provided,
+            'was_a_country_discussed': False,
+            'country_of_export': None,
+            'export_interest_category': None,
             'communication_channel': {
                 'id': str(interaction.communication_channel.pk),
                 'name': interaction.communication_channel.name,
@@ -763,6 +770,9 @@ class TestGetInteraction(APITestMixin):
             'policy_feedback_notes': '',
             'policy_issue_types': [],
             'was_policy_feedback_provided': False,
+            'was_a_country_discussed': False,
+            'country_of_export': None,
+            'export_interest_category': None,
             'communication_channel': {
                 'id': str(interaction.communication_channel.pk),
                 'name': interaction.communication_channel.name,

@@ -117,6 +117,9 @@ class TestAddServiceDelivery(APITestMixin):
                 request_data.get('policy_issue_types', []),
             'was_policy_feedback_provided':
                 request_data.get('was_policy_feedback_provided', False),
+            'was_a_country_discussed': False,
+            'country_of_export': None,
+            'export_interest_category': None,
             'subject': 'whatever',
             'date': '2017-04-18',
             'dit_participants': [

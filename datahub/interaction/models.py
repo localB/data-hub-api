@@ -16,6 +16,7 @@ from datahub.core.models import (
     BaseOrderedConstantModel,
 )
 from datahub.core.utils import get_front_end_url, StrEnum
+from datahub.metadata import models as metadata_models
 
 MAX_LENGTH = settings.CHAR_FIELD_MAX_LENGTH
 
@@ -188,6 +189,12 @@ class Interaction(ArchivableModel, BaseModel):
         ('other', 'Something else'),
     )
 
+    EXPORT_INTEREST_CATEGORIES = Choices(
+        ('not_interested', 'Not interested'),
+        ('currenty_exporting', 'Currently exporting to'),
+        ('future_interest', 'Future country of interest'),
+    )
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     theme = models.CharField(
         max_length=MAX_LENGTH,
@@ -293,6 +300,19 @@ class Interaction(ArchivableModel, BaseModel):
         related_name='interactions',
     )
     policy_feedback_notes = models.TextField(blank=True, default='')
+    # country of export
+    was_a_country_discussed = models.BooleanField(default=False)
+    country_of_export = models.ForeignKey(
+        metadata_models.Country, blank=True, null=True,
+        on_delete=models.SET_NULL,
+        help_text='Country that was in export related discussion during the interaction',
+    )
+    export_interest_category = models.CharField(
+        max_length=MAX_LENGTH,
+        choices=EXPORT_INTEREST_CATEGORIES,
+        null=True,
+        blank=True,
+    )
 
     @property
     def is_event(self):

@@ -334,6 +334,9 @@ class InteractionSerializer(serializers.ModelSerializer):
             'policy_feedback_notes',
             'policy_issue_types',
             'was_policy_feedback_provided',
+            'was_a_country_discussed',
+            'country_of_export',
+            'export_interest_category',
             'archived',
             'archived_by',
             'archived_on',
@@ -412,6 +415,12 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'too_many_contacts_for_event_service_delivery',
                     OperatorRule('contacts', lambda value: len(value) <= 1),
                     when=OperatorRule('is_event', bool),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('country_of_export', is_not_blank),
+                    OperatorRule('export_interest_category', is_not_blank),
+                    when=OperatorRule('was_a_country_discussed', bool),
                 ),
                 # These two rules are only checked for service deliveries as there's a separate
                 # check that event is blank for interactions above which takes precedence (to
