@@ -295,6 +295,13 @@ class Interaction(ArchivableModel, BaseModel):
         related_name='interactions',
     )
     policy_feedback_notes = models.TextField(blank=True, default='')
+    # Export countries interest
+    was_export_countries_discussed = models.BooleanField()
+    export_countries = models.ManyToManyField(
+        'CompanyExportCountry',
+        blank=True,
+        related_name='interactions',
+    )
 
     were_countries_discussed = models.BooleanField(null=True)
 
