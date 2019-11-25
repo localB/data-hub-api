@@ -152,6 +152,7 @@ class TestAddServiceDelivery(APITestMixin):
             },
             'service_answers': None,
             'investment_project': None,
+            'export_countries': [],
             'archived_documents_url_path': '',
             'created_by': {
                 'id': str(self.user.pk),

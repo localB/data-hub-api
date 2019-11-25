@@ -167,6 +167,7 @@ class TestAddInteraction(APITestMixin):
             'service_answers': None,
             'investment_project': request_data.get('investment_project'),
             'archived_documents_url_path': '',
+            'export_countries': [],
             'created_by': {
                 'id': str(adviser.pk),
                 'first_name': adviser.first_name,
@@ -710,6 +711,7 @@ class TestGetInteraction(APITestMixin):
                 'project_code': interaction.investment_project.project_code,
             } if interaction.investment_project else None,
             'archived_documents_url_path': interaction.archived_documents_url_path,
+            'export_countries': [],
             'created_by': {
                 'id': str(interaction.created_by.pk),
                 'first_name': interaction.created_by.first_name,
@@ -810,6 +812,7 @@ class TestGetInteraction(APITestMixin):
                 'name': interaction.investment_project.name,
                 'project_code': interaction.investment_project.project_code,
             },
+            'export_countries': [],
             'archived_documents_url_path': interaction.archived_documents_url_path,
             'created_by': {
                 'id': str(interaction.created_by.pk),

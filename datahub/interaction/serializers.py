@@ -20,6 +20,7 @@ from datahub.event.models import Event
 from datahub.interaction.models import (
     CommunicationChannel,
     Interaction,
+    InteractionExportCountry,
     InteractionDITParticipant,
     PolicyArea,
     PolicyIssueType,
@@ -32,7 +33,7 @@ from datahub.interaction.validators import (
     StatusChangeValidator,
 )
 from datahub.investment.project.serializers import NestedInvestmentProjectField
-from datahub.metadata.models import Service, Team
+from datahub.metadata.models import Country, Service, Team
 from datahub.metadata.serializers import SERVICE_LEAF_NODE_NOT_SELECTED_MESSAGE
 
 
@@ -98,6 +99,20 @@ class InteractionDITParticipantSerializer(serializers.ModelSerializer):
         # (UniqueTogetherValidator would not function correctly when multiple items are being
         # updated at once.)
         validators = []
+
+
+class InteractionExportCountrySerializer(serializers.ModelSerializer):
+    """
+    InteractionExportCountry serializer
+    """
+
+    country = NestedRelatedField(
+        Country, required=False, allow_null=True,
+    )
+
+    class Meta:
+        model = InteractionExportCountry
+        fields = ('country', 'status')
 
 
 class InteractionSerializer(serializers.ModelSerializer):
@@ -184,6 +199,9 @@ class InteractionSerializer(serializers.ModelSerializer):
         allow_empty=True,
         many=True,
         required=False,
+    )
+    export_countries = InteractionExportCountrySerializer(
+        many=True, required=False,
     )
 
     def validate_service(self, value):
@@ -289,6 +307,30 @@ class InteractionSerializer(serializers.ModelSerializer):
         for adviser in old_advisers - new_advisers:
             old_adviser_mapping[adviser].delete()
 
+    def _save_export_countries(self, interaction, validated_export_countries):
+        """
+        Adds export countries related to an interaction
+        Update is not supported as yet.
+        """
+        country_mapping = {
+            export_country.country.id: export_country
+            for export_country in interaction.export_countries.all()
+        }
+        data_mapping = {
+            item.country: item
+            for item in validated_export_countries
+        }
+
+        # Perform create, updates are not supported yet.
+        for country_id, data in data_mapping.items():
+            country = country_mapping.get(country_id, None)
+            if country is None:
+                InteractionExportCountry(
+                    country=country,
+                    interaction=interaction,
+                    status=data.status,
+                ).save()
+
     class Meta:
         model = Interaction
         extra_kwargs = {
@@ -334,6 +376,7 @@ class InteractionSerializer(serializers.ModelSerializer):
             'policy_feedback_notes',
             'policy_issue_types',
             'was_policy_feedback_provided',
+            'export_countries',
             'archived',
             'archived_by',
             'archived_on',
