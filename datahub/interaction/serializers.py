@@ -201,7 +201,8 @@ class InteractionSerializer(serializers.ModelSerializer):
         required=False,
     )
     export_countries = InteractionExportCountrySerializer(
-        many=True, required=False,
+        many=True,
+        required=False,
     )
 
     def validate_service(self, value):
@@ -240,9 +241,11 @@ class InteractionSerializer(serializers.ModelSerializer):
         Overridden to handle updating of dit_participants.
         """
         dit_participants = validated_data.pop('dit_participants')
+        export_countries = validated_data.pop('export_countries', [])
 
         interaction = super().create(validated_data)
         self._save_dit_participants(interaction, dit_participants)
+        self._save_export_countries(interaction, export_countries)
 
         return interaction
 
@@ -310,26 +313,26 @@ class InteractionSerializer(serializers.ModelSerializer):
     def _save_export_countries(self, interaction, validated_export_countries):
         """
         Adds export countries related to an interaction
-        Update is not supported as yet.
+        Update is not allowed yet
         """
         country_mapping = {
             export_country.country.id: export_country
             for export_country in interaction.export_countries.all()
         }
         data_mapping = {
-            item.country: item
+            item['country']: item
             for item in validated_export_countries
         }
 
         # Perform create, updates are not supported yet.
-        for country_id, data in data_mapping.items():
-            country = country_mapping.get(country_id, None)
+        for in_country, data in data_mapping.items():
+            country = country_mapping.get(in_country.id)
             if country is None:
-                InteractionExportCountry(
-                    country=country,
+                InteractionExportCountry.objects.create(
+                    country=in_country,
                     interaction=interaction,
-                    status=data.status,
-                ).save()
+                    status=data['status'],
+                )
 
     class Meta:
         model = Interaction

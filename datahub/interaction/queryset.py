@@ -2,7 +2,11 @@ from django.db.models import OuterRef, Prefetch, Subquery
 
 from datahub.company.models import Contact
 from datahub.core.model_helpers import get_m2m_model
-from datahub.interaction.models import Interaction, InteractionDITParticipant
+from datahub.interaction.models import (
+    InteractionExportCountry,
+    Interaction,
+    InteractionDITParticipant,
+)
 
 
 def get_base_interaction_queryset():
@@ -31,6 +35,14 @@ def get_base_interaction_queryset():
                 InteractionDITParticipant.objects
                                          .order_by('pk')
                                          .select_related('adviser', 'team')
+            ),
+        ),
+        Prefetch(
+            'export_countries',
+            queryset=(
+                InteractionExportCountry.objects
+                                        .order_by('country__name')
+                                        .select_related('country')
             ),
         ),
     )

@@ -9,8 +9,13 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
-from datahub.company.test.factories import AdviserFactory, CompanyFactory, ContactFactory
-from datahub.core.constants import Service
+from datahub.company.models.company import CompanyExportCountry
+from datahub.company.test.factories import (
+    AdviserFactory,
+    CompanyFactory,
+    ContactFactory,
+)
+from datahub.core.constants import Country, Service
 from datahub.core.test_utils import APITestMixin, create_test_user, random_obj_for_model
 from datahub.event.test.factories import EventFactory
 from datahub.interaction.models import (
@@ -81,6 +86,18 @@ class TestAddInteraction(APITestMixin):
                 'policy_feedback_notes': 'Policy feedback notes',
                 'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
             },
+            {
+                'export_countries': [
+                    {
+                        'country': {
+                            'id': Country.canada.value.id,
+                            'name': Country.canada.value.name,
+                        },
+                        'status':
+                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                    },
+                ],
+            },
         ),
     )
     def test_add(self, extra_data, permissions):
@@ -112,6 +129,7 @@ class TestAddInteraction(APITestMixin):
 
         assert response.status_code == status.HTTP_201_CREATED
         response_data = response.json()
+        response_data['export_countries'].sort(key=itemgetter('country'))
         assert response_data == {
             'id': response_data['id'],
             'kind': Interaction.KINDS.interaction,
@@ -167,7 +185,7 @@ class TestAddInteraction(APITestMixin):
             'service_answers': None,
             'investment_project': request_data.get('investment_project'),
             'archived_documents_url_path': '',
-            'export_countries': [],
+            'export_countries': request_data.get('export_countries', []),
             'created_by': {
                 'id': str(adviser.pk),
                 'first_name': adviser.first_name,

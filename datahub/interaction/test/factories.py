@@ -12,7 +12,6 @@ from datahub.event.test.factories import EventFactory
 from datahub.interaction.models import (
     CommunicationChannel,
     Interaction,
-    InteractionExportCountry,
     PolicyArea,
     PolicyIssueType,
     ServiceDeliveryStatus,
