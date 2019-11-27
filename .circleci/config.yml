@@ -62,9 +62,17 @@ job_defaults: &job_defaults
     - restore_cache:
         name: Restore pip cache
         keys:
-          - v2-<< parameters.python_image >>-{{ checksum "requirements.txt" }}
+          - v2-<< parameters.python_image >>-{{ checksum "poetry.lock" }}
         paths:
           - ~/cache/pip
+
+    - run:
+        name: Install Poetry
+        command: ./install-poetry.sh
+
+    - run:
+        name: Create requirements.txt
+        command: PIP_CACHE_DIR=~/cache/pip $HOME/.poetry/bin/poetry export --dev -f requirements.txt -o requirements.txt
 
     - run:
         name: Install dependencies
@@ -72,7 +80,7 @@ job_defaults: &job_defaults
 
     - save_cache:
         name: Save pip cache
-        key: v2-<< parameters.python_image >>-{{ checksum "requirements.txt" }}
+        key: v2-<< parameters.python_image >>-{{ checksum "poetry.lock" }}
         paths:
           - ~/cache/pip
     - run:

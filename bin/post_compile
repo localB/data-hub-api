@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+set  -xe
+
+./install-poetry.sh
+$HOME/.poetry/bin/poetry install --no-dev
