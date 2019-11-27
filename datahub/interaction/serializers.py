@@ -379,6 +379,7 @@ class InteractionSerializer(serializers.ModelSerializer):
             'policy_feedback_notes',
             'policy_issue_types',
             'was_policy_feedback_provided',
+            'were_countries_discussed',
             'export_countries',
             'archived',
             'archived_by',
@@ -416,6 +417,12 @@ class InteractionSerializer(serializers.ModelSerializer):
                 ValidationRule(
                     'invalid_for_investment',
                     EqualsRule('kind', Interaction.KINDS.interaction),
+                    when=EqualsRule('theme', Interaction.THEMES.investment),
+                ),
+                ValidationRule(
+                    'invalid_for_investment',
+                    EqualsRule('were_countries_discussed', True),
+                    OperatorRule('export_countries', is_not_blank),
                     when=EqualsRule('theme', Interaction.THEMES.investment),
                 ),
                 ValidationRule(
@@ -458,6 +465,16 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'too_many_contacts_for_event_service_delivery',
                     OperatorRule('contacts', lambda value: len(value) <= 1),
                     when=OperatorRule('is_event', bool),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('export_countries', is_not_blank),
+                    when=OperatorRule('were_countries_discussed', bool),
+                ),
+                ValidationRule(
+                    'invalid_when_no_countries_discussed',
+                    OperatorRule('export_countries', not_),
+                    when=OperatorRule('were_countries_discussed', not_),
                 ),
                 # These two rules are only checked for service deliveries as there's a separate
                 # check that event is blank for interactions above which takes precedence (to

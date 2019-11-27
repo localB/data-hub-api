@@ -29,6 +29,7 @@ from datahub.interaction.models import (
 from datahub.interaction.test.factories import (
     CompanyInteractionFactory,
     CompanyInteractionFactoryWithPolicyFeedback,
+    InteractionExportCountryFactory,
     InvestmentProjectInteractionFactory,
 )
 from datahub.interaction.test.permissions import (
@@ -87,6 +88,7 @@ class TestAddInteraction(APITestMixin):
                 'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
             },
             {
+                'were_countries_discussed': True,
                 'export_countries': [
                     {
                         'country': {
@@ -185,6 +187,7 @@ class TestAddInteraction(APITestMixin):
             'service_answers': None,
             'investment_project': request_data.get('investment_project'),
             'archived_documents_url_path': '',
+            'were_countries_discussed': request_data.get('were_countries_discussed', False),
             'export_countries': request_data.get('export_countries', []),
             'created_by': {
                 'id': str(adviser.pk),
@@ -312,6 +315,51 @@ class TestAddInteraction(APITestMixin):
                 },
             ),
 
+            # export countries required when countries discussed is True
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': Service.inbound_referral.value.id,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+
+                    'was_policy_feedback_provided': False,
+                    'were_countries_discussed': True,
+                },
+                {
+                    'export_countries': ['This field is required.'],
+                },
+            ),
+
+            # export countries cannot be blank when countries discussed is True
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': Service.inbound_referral.value.id,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+
+                    'was_policy_feedback_provided': False,
+                    'were_countries_discussed': True,
+                    'export_countries': [],
+                },
+                {
+                    'export_countries': ['This field is required.'],
+                },
+            ),
+
             # fields not allowed
             (
                 {
@@ -327,6 +375,7 @@ class TestAddInteraction(APITestMixin):
                     'service': Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
                     'was_policy_feedback_provided': False,
+                    'were_countries_discussed': False,
                     'grant_amount_offered': '1111.11',
                     'net_company_receipt': '8888.11',
 
@@ -339,6 +388,7 @@ class TestAddInteraction(APITestMixin):
                     'policy_areas': [partial(random_obj_for_model, PolicyArea)],
                     'policy_feedback_notes': 'Policy feedback notes.',
                     'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
+                    'export_countries': [InteractionExportCountryFactory],
                 },
                 {
                     'is_event': ['This field is only valid for service deliveries.'],
@@ -354,6 +404,9 @@ class TestAddInteraction(APITestMixin):
                     ],
                     'policy_issue_types': [
                         'This field is only valid when policy feedback has been provided.',
+                    ],
+                    'export_countries': [
+                        'This field is only valid when countries discussed has been provided.',
                     ],
                 },
             ),
@@ -374,11 +427,13 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': None,
                     'was_policy_feedback_provided': None,
                     'policy_feedback_notes': None,
+                    'were_countries_discussed': None,
                 },
                 {
                     'dit_participants': ['This field may not be null.'],
                     'was_policy_feedback_provided': ['This field may not be null.'],
                     'policy_feedback_notes': ['This field may not be null.'],
+                    'were_countries_discussed': ['This field may not be null.'],
                 },
             ),
 
@@ -729,6 +784,7 @@ class TestGetInteraction(APITestMixin):
                 'project_code': interaction.investment_project.project_code,
             } if interaction.investment_project else None,
             'archived_documents_url_path': interaction.archived_documents_url_path,
+            'were_countries_discussed': interaction.were_countries_discussed,
             'export_countries': [],
             'created_by': {
                 'id': str(interaction.created_by.pk),
@@ -830,6 +886,7 @@ class TestGetInteraction(APITestMixin):
                 'name': interaction.investment_project.name,
                 'project_code': interaction.investment_project.project_code,
             },
+            'were_countries_discussed': interaction.were_countries_discussed,
             'export_countries': [],
             'archived_documents_url_path': interaction.archived_documents_url_path,
             'created_by': {
