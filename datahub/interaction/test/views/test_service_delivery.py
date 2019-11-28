@@ -152,6 +152,7 @@ class TestAddServiceDelivery(APITestMixin):
             },
             'service_answers': None,
             'investment_project': None,
+            'were_countries_discussed': request_data.get('were_countries_discussed', False),
             'export_countries': [],
             'archived_documents_url_path': '',
             'created_by': {

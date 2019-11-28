@@ -15,7 +15,7 @@ from datahub.company.test.factories import (
     CompanyFactory,
     ContactFactory,
 )
-from datahub.core.constants import Country, Service
+from datahub.core import constants
 from datahub.core.test_utils import APITestMixin, create_test_user, random_obj_for_model
 from datahub.event.test.factories import EventFactory
 from datahub.interaction.models import (
@@ -29,6 +29,7 @@ from datahub.interaction.models import (
 from datahub.interaction.test.factories import (
     CompanyInteractionFactory,
     CompanyInteractionFactoryWithPolicyFeedback,
+    ExportCountriesInteractionFactory,
     InteractionExportCountryFactory,
     InvestmentProjectInteractionFactory,
 )
@@ -88,12 +89,41 @@ class TestAddInteraction(APITestMixin):
                 'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
             },
             {
+                'theme': Interaction.THEMES.export,
                 'were_countries_discussed': True,
                 'export_countries': [
                     {
                         'country': {
-                            'id': Country.canada.value.id,
-                            'name': Country.canada.value.name,
+                            'id': constants.Country.canada.value.id,
+                            'name': constants.Country.canada.value.name,
+                        },
+                        'status':
+                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                    },
+                ],
+            },
+            {
+                'theme': Interaction.THEMES.other,
+                'were_countries_discussed': True,
+                'export_countries': [
+                    {
+                        'country': {
+                            'id': constants.Country.canada.value.id,
+                            'name': constants.Country.canada.value.name,
+                        },
+                        'status':
+                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                    },
+                ],
+            },
+            {
+                'theme': Interaction.THEMES.export,
+                'were_countries_discussed': True,
+                'export_countries': [
+                    {
+                        'country': {
+                            'id': constants.Country.canada.value.id,
+                            'name': constants.Country.canada.value.name,
                         },
                         'status':
                             CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
@@ -120,7 +150,7 @@ class TestAddInteraction(APITestMixin):
             ],
             'company': company.pk,
             'contacts': [contact.pk],
-            'service': Service.inbound_referral.value.id,
+            'service': constants.Service.inbound_referral.value.id,
             'was_policy_feedback_provided': False,
 
             **resolve_data(extra_data),
@@ -181,8 +211,8 @@ class TestAddInteraction(APITestMixin):
             }],
             'event': None,
             'service': {
-                'id': str(Service.inbound_referral.value.id),
-                'name': Service.inbound_referral.value.name,
+                'id': str(constants.Service.inbound_referral.value.id),
+                'name': constants.Service.inbound_referral.value.name,
             },
             'service_answers': None,
             'investment_project': request_data.get('investment_project'),
@@ -258,7 +288,7 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                 },
                 {
@@ -277,7 +307,7 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
 
                     'was_policy_feedback_provided': True,
@@ -300,7 +330,7 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
 
                     'was_policy_feedback_provided': True,
@@ -312,51 +342,6 @@ class TestAddInteraction(APITestMixin):
                     'policy_areas': ['This field is required.'],
                     'policy_feedback_notes': ['This field is required.'],
                     'policy_issue_types': ['This field is required.'],
-                },
-            ),
-
-            # export countries required when countries discussed is True
-            (
-                {
-                    'kind': Interaction.KINDS.interaction,
-                    'date': date.today().isoformat(),
-                    'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
-                    'dit_participants': [
-                        {'adviser': AdviserFactory},
-                    ],
-                    'service': Service.inbound_referral.value.id,
-                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
-
-                    'was_policy_feedback_provided': False,
-                    'were_countries_discussed': True,
-                },
-                {
-                    'export_countries': ['This field is required.'],
-                },
-            ),
-
-            # export countries cannot be blank when countries discussed is True
-            (
-                {
-                    'kind': Interaction.KINDS.interaction,
-                    'date': date.today().isoformat(),
-                    'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
-                    'dit_participants': [
-                        {'adviser': AdviserFactory},
-                    ],
-                    'service': Service.inbound_referral.value.id,
-                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
-
-                    'was_policy_feedback_provided': False,
-                    'were_countries_discussed': True,
-                    'export_countries': [],
-                },
-                {
-                    'export_countries': ['This field is required.'],
                 },
             ),
 
@@ -372,7 +357,7 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
                     'was_policy_feedback_provided': False,
                     'were_countries_discussed': False,
@@ -388,7 +373,6 @@ class TestAddInteraction(APITestMixin):
                     'policy_areas': [partial(random_obj_for_model, PolicyArea)],
                     'policy_feedback_notes': 'Policy feedback notes.',
                     'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
-                    'export_countries': [InteractionExportCountryFactory],
                 },
                 {
                     'is_event': ['This field is only valid for service deliveries.'],
@@ -405,9 +389,6 @@ class TestAddInteraction(APITestMixin):
                     'policy_issue_types': [
                         'This field is only valid when policy feedback has been provided.',
                     ],
-                    'export_countries': [
-                        'This field is only valid when countries discussed has been provided.',
-                    ],
                 },
             ),
 
@@ -420,7 +401,7 @@ class TestAddInteraction(APITestMixin):
                     'notes': 'hello',
                     'company': CompanyFactory,
                     'contacts': [ContactFactory],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
 
                     # fields where None is not allowed
@@ -448,7 +429,7 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
 
@@ -471,10 +452,9 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
-
                     'event': EventFactory,
                     'is_event': False,
                 },
@@ -492,7 +472,7 @@ class TestAddInteraction(APITestMixin):
                     'subject': 'whatever',
                     'company': CompanyFactory,
                     'contacts': [ContactFactory],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
 
                     'dit_participants': [],
@@ -517,7 +497,7 @@ class TestAddInteraction(APITestMixin):
                             'adviser': AdviserFactory,
                         },
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                     'status': 'foobar',
                 },
@@ -539,7 +519,7 @@ class TestAddInteraction(APITestMixin):
                             'adviser': AdviserFactory,
                         },
                     ],
-                    'service': Service.enquiry_or_referral_received.value.id,
+                    'service': constants.Service.enquiry_or_referral_received.value.id,
                     'was_policy_feedback_provided': False,
                 },
                 {
@@ -557,12 +537,35 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                     'status': None,
                 },
                 {
                     'status': ['This field may not be null.'],
+                },
+            ),
+
+            # were_countries_discussed can't be true for investment theme
+            (
+                {
+                    'theme': Interaction.THEMES.investment,
+                    'kind': Interaction.KINDS.interaction,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+                    'were_countries_discussed': True,
+                },
+                {
+                    'were_countries_discussed':
+                        ["This value can't be selected for investment interactions."],
                 },
             ),
         ),
@@ -605,7 +608,7 @@ class TestAddInteraction(APITestMixin):
                 ],
                 'notes': 'hello',
                 'investment_project': project.pk,
-                'service': Service.inbound_referral.value.id,
+                'service': constants.Service.inbound_referral.value.id,
                 'was_policy_feedback_provided': False,
             },
         )
@@ -644,7 +647,7 @@ class TestAddInteraction(APITestMixin):
                 ],
                 'notes': 'hello',
                 'investment_project': project.pk,
-                'service': Service.inbound_referral.value.id,
+                'service': constants.Service.inbound_referral.value.id,
                 'was_policy_feedback_provided': False,
             },
         )
@@ -677,7 +680,7 @@ class TestAddInteraction(APITestMixin):
                     {'adviser': requester.pk},
                 ],
                 'notes': 'hello',
-                'service': Service.inbound_referral.value.id,
+                'service': constants.Service.inbound_referral.value.id,
                 'was_policy_feedback_provided': False,
             },
         )
@@ -697,6 +700,7 @@ class TestGetInteraction(APITestMixin):
             CompanyInteractionFactory,
             CompanyInteractionFactoryWithPolicyFeedback,
             InvestmentProjectInteractionFactory,
+            ExportCountriesInteractionFactory,
         ),
     )
     @pytest.mark.parametrize('permissions', NON_RESTRICTED_VIEW_PERMISSIONS)
@@ -774,8 +778,8 @@ class TestGetInteraction(APITestMixin):
             ],
             'event': None,
             'service': {
-                'id': str(Service.inbound_referral.value.id),
-                'name': Service.inbound_referral.value.name,
+                'id': str(constants.Service.inbound_referral.value.id),
+                'name': constants.Service.inbound_referral.value.name,
             },
             'service_answers': None,
             'investment_project': {
@@ -785,7 +789,16 @@ class TestGetInteraction(APITestMixin):
             } if interaction.investment_project else None,
             'archived_documents_url_path': interaction.archived_documents_url_path,
             'were_countries_discussed': interaction.were_countries_discussed,
-            'export_countries': [],
+            'export_countries': [
+                {
+                    'country': {
+                        'id': str(export_country.country.id),
+                        'name': export_country.country.name,
+                    },
+                    'status': export_country.status,
+                }
+                for export_country in interaction.export_countries.all()
+            ],
             'created_by': {
                 'id': str(interaction.created_by.pk),
                 'first_name': interaction.created_by.first_name,
@@ -805,6 +818,36 @@ class TestGetInteraction(APITestMixin):
             'archived_on': None,
             'archived_reason': None,
         }
+
+    @pytest.mark.parametrize('permissions', NON_RESTRICTED_VIEW_PERMISSIONS)
+    @freeze_time('2017-04-18 13:25:30.986208')
+    def test_non_restricted_user_can_get_multiple_export_countries_interaction(self, permissions):
+        """Test that a user can get an interaction with multiple export countries."""
+        requester = create_test_user(permission_codenames=permissions)
+        interaction = ExportCountriesInteractionFactory()
+        interaction.export_countries.set([
+            InteractionExportCountryFactory(
+                interaction=interaction,
+            )
+            for _ in range(3)
+        ])
+        api_client = self.create_api_client(user=requester)
+        url = reverse('api-v3:interaction:item', kwargs={'pk': interaction.pk})
+        response = api_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()
+        response_data['export_countries'].sort(key=lambda item: item['country']['name'])
+        assert response_data['export_countries'] == [
+            {
+                'country': {
+                    'id': str(export_country.country.id),
+                    'name': export_country.country.name,
+                },
+                'status': export_country.status,
+            }
+            for export_country in interaction.export_countries.order_by('country__name')
+        ]
 
     @freeze_time('2017-04-18 13:25:30.986208')
     def test_restricted_user_can_get_associated_investment_project_interaction(self):
@@ -877,8 +920,8 @@ class TestGetInteraction(APITestMixin):
             ],
             'event': None,
             'service': {
-                'id': str(Service.inbound_referral.value.id),
-                'name': Service.inbound_referral.value.name,
+                'id': str(constants.Service.inbound_referral.value.id),
+                'name': constants.Service.inbound_referral.value.name,
             },
             'service_answers': None,
             'investment_project': {
@@ -887,7 +930,16 @@ class TestGetInteraction(APITestMixin):
                 'project_code': interaction.investment_project.project_code,
             },
             'were_countries_discussed': interaction.were_countries_discussed,
-            'export_countries': [],
+            'export_countries': [
+                {
+                    'country': {
+                        'id': str(export_country.country.id),
+                        'name': export_country.country.name,
+                    },
+                    'status': export_country.status,
+                }
+                for export_country in interaction.export_countries.all()
+            ],
             'archived_documents_url_path': interaction.archived_documents_url_path,
             'created_by': {
                 'id': str(interaction.created_by.pk),
@@ -1080,7 +1132,7 @@ class TestUpdateInteraction(APITestMixin):
             (
                 {
                     'status': Interaction.STATUSES.complete,
-                    'service': Service.inbound_referral.value.id,
+                    'service': constants.Service.inbound_referral.value.id,
                 },
                 {
                     'communication_channel': ['This field is required.'],
@@ -1118,6 +1170,41 @@ class TestUpdateInteraction(APITestMixin):
 
         assert(response.status_code == status.HTTP_400_BAD_REQUEST)
         assert response.data == error_response
+
+    @pytest.mark.parametrize('permissions', NON_RESTRICTED_CHANGE_PERMISSIONS)
+    @freeze_time('2017-04-18 13:25:30.986208')
+    def test_cant_update_export_countries(self, permissions):
+        """Test that a user can't update export countries in an interaction."""
+        requester = create_test_user(permission_codenames=permissions)
+        interaction = ExportCountriesInteractionFactory()
+        interaction.export_countries.set([
+            InteractionExportCountryFactory(
+                interaction=interaction,
+                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
+            ),
+        ])
+        export_country = interaction.export_countries.first()
+
+        api_client = self.create_api_client(user=requester)
+        url = reverse('api-v3:interaction:item', kwargs={'pk': interaction.pk})
+        response = api_client.patch(
+            url,
+            data={
+                'export_countries': [
+                    {
+                        'country': {
+                            'id': export_country.country.id,
+                            'name': export_country.country.name,
+                        },
+                        'status':
+                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                    },
+                ],
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['export_countries'][0]['status'] == 'not_interested'
 
 
 class TestListInteractions(APITestMixin):

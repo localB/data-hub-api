@@ -20,8 +20,8 @@ from datahub.event.models import Event
 from datahub.interaction.models import (
     CommunicationChannel,
     Interaction,
-    InteractionExportCountry,
     InteractionDITParticipant,
+    InteractionExportCountry,
     PolicyArea,
     PolicyIssueType,
     ServiceDeliveryStatus,
@@ -238,7 +238,8 @@ class InteractionSerializer(serializers.ModelSerializer):
         """
         Create an interaction.
 
-        Overridden to handle updating of dit_participants.
+        Overridden to handle updating of dit_participants
+        and export_countries.
         """
         dit_participants = validated_data.pop('dit_participants')
         export_countries = validated_data.pop('export_countries', [])
@@ -254,14 +255,20 @@ class InteractionSerializer(serializers.ModelSerializer):
         """
         Create an interaction.
 
-        Overridden to handle updating of dit_participants.
+        Overridden to handle updating of dit_participants
+        and export_countries.
         """
         dit_participants = validated_data.pop('dit_participants', None)
+        export_countries = validated_data.pop('export_countries', None)
+
         interaction = super().update(instance, validated_data)
 
         # For PATCH requests, dit_participants may not be being updated
         if dit_participants is not None:
             self._save_dit_participants(interaction, dit_participants)
+
+        if export_countries is not None:
+            self._save_export_countries(interaction, export_countries)
 
         return interaction
 
@@ -324,15 +331,18 @@ class InteractionSerializer(serializers.ModelSerializer):
             for item in validated_export_countries
         }
 
-        # Perform create, updates are not supported yet.
         for in_country, data in data_mapping.items():
             country = country_mapping.get(in_country.id)
             if country is None:
+                # Perform create
                 InteractionExportCountry.objects.create(
                     country=in_country,
                     interaction=interaction,
                     status=data['status'],
                 )
+            else:
+                # updates are not supported yet
+                return
 
     class Meta:
         model = Interaction
@@ -417,12 +427,7 @@ class InteractionSerializer(serializers.ModelSerializer):
                 ValidationRule(
                     'invalid_for_investment',
                     EqualsRule('kind', Interaction.KINDS.interaction),
-                    when=EqualsRule('theme', Interaction.THEMES.investment),
-                ),
-                ValidationRule(
-                    'invalid_for_investment',
-                    EqualsRule('were_countries_discussed', True),
-                    OperatorRule('export_countries', is_not_blank),
+                    OperatorRule('were_countries_discussed', not_),
                     when=EqualsRule('theme', Interaction.THEMES.investment),
                 ),
                 ValidationRule(
@@ -465,16 +470,6 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'too_many_contacts_for_event_service_delivery',
                     OperatorRule('contacts', lambda value: len(value) <= 1),
                     when=OperatorRule('is_event', bool),
-                ),
-                ValidationRule(
-                    'required',
-                    OperatorRule('export_countries', is_not_blank),
-                    when=OperatorRule('were_countries_discussed', bool),
-                ),
-                ValidationRule(
-                    'invalid_when_no_countries_discussed',
-                    OperatorRule('export_countries', not_),
-                    when=OperatorRule('were_countries_discussed', not_),
                 ),
                 # These two rules are only checked for service deliveries as there's a separate
                 # check that event is blank for interactions above which takes precedence (to
