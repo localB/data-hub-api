@@ -12,6 +12,7 @@ from rest_framework.settings import api_settings
 from datahub.company.models.company import CompanyExportCountry
 from datahub.company.test.factories import (
     AdviserFactory,
+    CompanyExportCountryFactory,
     CompanyFactory,
     ContactFactory,
 )
@@ -40,6 +41,7 @@ from datahub.interaction.test.permissions import (
 )
 from datahub.interaction.test.views.utils import resolve_data
 from datahub.investment.project.test.factories import InvestmentProjectFactory
+from datahub.metadata.models import Country
 from datahub.metadata.test.factories import TeamFactory
 
 
@@ -238,6 +240,126 @@ class TestAddInteraction(APITestMixin):
             'archived_on': None,
             'archived_reason': None,
         }
+
+    @freeze_time('2017-04-18 13:25:30.986208')
+    @pytest.mark.parametrize('permissions', NON_RESTRICTED_ADD_PERMISSIONS)
+    def test_add_interaction_with_export_country_add_company_export_country(self, permissions):
+        """
+        Test add a new interaction with export country
+        make sure it syncs across to company as a new entry
+        """
+        adviser = create_test_user(permission_codenames=permissions, dit_team=TeamFactory())
+        company = CompanyFactory()
+        contact = ContactFactory(company=company)
+        communication_channel = random_obj_for_model(CommunicationChannel)
+
+        url = reverse('api-v3:interaction:collection')
+        request_data = {
+            'kind': Interaction.KINDS.interaction,
+            'communication_channel': communication_channel.pk,
+            'subject': 'whatever',
+            'date': date.today().isoformat(),
+            'dit_participants': [
+                {'adviser': adviser.pk},
+            ],
+            'company': company.pk,
+            'contacts': [contact.pk],
+            'service': constants.Service.inbound_referral.value.id,
+            'was_policy_feedback_provided': False,
+            'theme': Interaction.THEMES.export,
+            'were_countries_discussed': True,
+            'export_countries': [
+                {
+                    'country': {
+                        'id': constants.Country.canada.value.id,
+                        'name': constants.Country.canada.value.name,
+                    },
+                    'status':
+                        CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                },
+            ],
+        }
+
+        api_client = self.create_api_client(user=adviser)
+        response = api_client.post(url, request_data)
+
+        assert response.status_code == status.HTTP_201_CREATED
+        company_url = reverse('api-v4:company:item', kwargs={'pk': company.pk})
+        company_response = self.api_client.get(company_url)
+
+        assert company_response.status_code == status.HTTP_200_OK
+        response.json()['export_countries'] == [
+            {
+                'country': {
+                    'id': constants.Country.canada.value.id,
+                    'name': constants.Country.canada.value.name,
+                },
+                'status':
+                    CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+            },
+        ]
+
+    @freeze_time('2017-04-18 13:25:30.986208')
+    @pytest.mark.parametrize('permissions', NON_RESTRICTED_ADD_PERMISSIONS)
+    def test_add_interaction_with_export_country_update_company_export_country(self, permissions):
+        """Test add a new interaction."""
+        adviser = create_test_user(permission_codenames=permissions, dit_team=TeamFactory())
+        company = CompanyFactory()
+        company.export_countries.set([
+            CompanyExportCountryFactory(
+                company=company,
+                country=Country.objects.get(id=constants.Country.canada.value.id),
+                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
+            ),
+        ])
+        contact = ContactFactory(company=company)
+        communication_channel = random_obj_for_model(CommunicationChannel)
+
+        url = reverse('api-v3:interaction:collection')
+        request_data = {
+            'kind': Interaction.KINDS.interaction,
+            'communication_channel': communication_channel.pk,
+            'subject': 'whatever',
+            'date': date.today().isoformat(),
+            'dit_participants': [
+                {'adviser': adviser.pk},
+            ],
+            'company': company.pk,
+            'contacts': [contact.pk],
+            'service': constants.Service.inbound_referral.value.id,
+            'was_policy_feedback_provided': False,
+            'theme': Interaction.THEMES.export,
+            'were_countries_discussed': True,
+            'export_countries': [
+                {
+                    'country': {
+                        'id': constants.Country.canada.value.id,
+                        'name': constants.Country.canada.value.name,
+                    },
+                    'status':
+                        CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                },
+            ],
+        }
+
+        api_client = self.create_api_client(user=adviser)
+        response = api_client.post(url, request_data)
+
+        assert response.status_code == status.HTTP_201_CREATED
+        company_url = reverse('api-v4:company:item', kwargs={'pk': company.pk})
+        company_response = self.api_client.get(company_url)
+
+        assert company_response.status_code == status.HTTP_200_OK
+        response.json()['export_countries'] == [
+            {
+                'country': {
+                    'id': constants.Country.canada.value.id,
+                    'name': constants.Country.canada.value.name,
+                },
+                'status':
+                    CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+            },
+        ]
 
     @pytest.mark.parametrize(
         'data,errors',

@@ -333,12 +333,20 @@ class InteractionSerializer(serializers.ModelSerializer):
 
         for in_country, data in data_mapping.items():
             country = country_mapping.get(in_country.id)
+            status = data['status']
             if country is None:
                 # Perform create
                 InteractionExportCountry.objects.create(
                     country=in_country,
                     interaction=interaction,
-                    status=data['status'],
+                    status=status,
+                    created_by=interaction.created_by,
+                )
+                # Sync comapny_CompanyExportCountry model
+                interaction.company.add_export_country(
+                    in_country,
+                    status,
+                    interaction.created_by,
                 )
             else:
                 # updates are not supported yet
