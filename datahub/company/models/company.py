@@ -419,25 +419,32 @@ class Company(ArchivableModel, BaseModel):
         self.one_list_tier = None
         self.save()
 
-    def add_export_country(self, country, status, adviser):
+    def add_export_country(self, country, status, record_date, adviser):
         """
-        Add or update a company export_country
+        Add a company export_country, if it doesn't exist
+
+        If the company already exists and incoming status is different
+        check if incoming record is newer and update
         """
         if self.export_countries.filter(country=country).exists():
             export_country = self.export_countries.get(
                 country=country,
             )
             # update only if new status is different
-            if export_country.status is not status:
-                export_country.status = status
-                export_country.modified_by = adviser
-                export_country.save()
+            # and if incoming record is newer
+            if export_country.status is not status and export_country.modified_on < record_date:
+                export_country(
+                    status=status,
+                    modified_by=adviser,
+                    modified_on=record_date,
+                ).save()
         else:
             self.export_countries.create(
                 company=self,
                 country=country,
                 status=status,
                 created_by=adviser,
+                modified_on=record_date,
             )
 
 

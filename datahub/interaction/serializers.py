@@ -2,6 +2,7 @@ from collections import Counter
 from operator import not_
 
 from django.db.transaction import atomic
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy
 from rest_framework import serializers
 
@@ -12,6 +13,7 @@ from datahub.core.validate_utils import DataCombiner, is_blank, is_not_blank
 from datahub.core.validators import (
     AndRule,
     EqualsRule,
+    InRule,
     OperatorRule,
     RulesBasedValidator,
     ValidationRule,
@@ -343,9 +345,12 @@ class InteractionSerializer(serializers.ModelSerializer):
                     created_by=interaction.created_by,
                 )
                 # Sync comapny_CompanyExportCountry model
+                # NOTE: current date is preffered over future interaction date
+                record_date = now() if interaction.date > now() else interaction.date
                 interaction.company.add_export_country(
                     in_country,
                     status,
+                    record_date,
                     interaction.created_by,
                 )
             else:
@@ -473,6 +478,15 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'required',
                     OperatorRule('is_event', is_not_blank),
                     when=EqualsRule('kind', Interaction.KINDS.service_delivery),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('were_countries_discussed', bool),
+                    OperatorRule('export_countries', is_not_blank),
+                    when=InRule(
+                        'theme',
+                        [Interaction.THEMES.export, Interaction.THEMES.other],
+                    ),
                 ),
                 ValidationRule(
                     'too_many_contacts_for_event_service_delivery',
