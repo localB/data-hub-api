@@ -243,7 +243,7 @@ class TestAddInteraction(APITestMixin):
 
     @freeze_time('2017-04-18 13:25:30.986208')
     @pytest.mark.parametrize('permissions', NON_RESTRICTED_ADD_PERMISSIONS)
-    def test_add_interaction_with_export_country_add_company_export_country(self, permissions):
+    def test_add_interaction_add_company_export_country(self, permissions):
         """
         Test add a new interaction with export country
         make sure it syncs across to company as a new entry
@@ -301,26 +301,67 @@ class TestAddInteraction(APITestMixin):
 
     @freeze_time('2017-04-18 13:25:30.986208')
     @pytest.mark.parametrize('permissions', NON_RESTRICTED_ADD_PERMISSIONS)
-    def test_add_interaction_with_export_country_update_company_export_country(self, permissions):
-        """Test add a new interaction."""
+    @pytest.mark.parametrize(
+        'export_country_date,interaction_date,expected_status',
+        (
+            # current dated interaction overriding existing older status
+            (
+                '2017-01-18',
+                '2017-04-18',
+                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+            ),
+            # past dated interaction can't override existing newer status
+            (
+                '2017-03-18',
+                '2017-02-18',
+                CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
+            ),
+            # future dated interaction, will be treated as current
+            # and can't override existing much newer status
+            (
+                '2017-05-18',
+                '2018-02-18',
+                CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
+            ),
+            # future dated interaction, will be treated as current
+            # and will override existing older status
+            (
+                '2017-03-18',
+                '2018-02-18',
+                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+            ),
+        ),
+    )
+    def test_add_interaction_update_company_export_country(
+        self,
+        permissions,
+        export_country_date,
+        interaction_date,
+        expected_status,
+    ):
+        """
+        Test add a new interaction with export country
+        consolidates to company export countries
+        """
         adviser = create_test_user(permission_codenames=permissions, dit_team=TeamFactory())
         company = CompanyFactory()
-        company.export_countries.set([
-            CompanyExportCountryFactory(
-                company=company,
-                country=Country.objects.get(id=constants.Country.canada.value.id),
-                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
-            ),
-        ])
+        with freeze_time(export_country_date):
+            company.export_countries.set([
+                CompanyExportCountryFactory(
+                    company=company,
+                    country=Country.objects.get(id=constants.Country.canada.value.id),
+                    status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.not_interested,
+                ),
+            ])
         contact = ContactFactory(company=company)
         communication_channel = random_obj_for_model(CommunicationChannel)
 
         url = reverse('api-v3:interaction:collection')
         request_data = {
+            'date': interaction_date,
             'kind': Interaction.KINDS.interaction,
             'communication_channel': communication_channel.pk,
             'subject': 'whatever',
-            'date': date.today().isoformat(),
             'dit_participants': [
                 {'adviser': adviser.pk},
             ],
@@ -356,8 +397,7 @@ class TestAddInteraction(APITestMixin):
                     'id': constants.Country.canada.value.id,
                     'name': constants.Country.canada.value.name,
                 },
-                'status':
-                    CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                'status': expected_status,
             },
         ]
 
@@ -464,6 +504,31 @@ class TestAddInteraction(APITestMixin):
                     'policy_areas': ['This field is required.'],
                     'policy_feedback_notes': ['This field is required.'],
                     'policy_issue_types': ['This field is required.'],
+                },
+            ),
+
+            # export_countries cannot be blank when were_countries_discussed is True
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.export,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+
+                    'were_countries_discussed': True,
+                    'export_countries': [],
+                },
+                {
+                    'export_countries': ['This field is required.'],
                 },
             ),
 

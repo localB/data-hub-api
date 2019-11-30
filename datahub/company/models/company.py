@@ -433,11 +433,10 @@ class Company(ArchivableModel, BaseModel):
             # update only if new status is different
             # and if incoming record is newer
             if export_country.status is not status and export_country.modified_on < record_date:
-                export_country(
-                    status=status,
-                    modified_by=adviser,
-                    modified_on=record_date,
-                ).save()
+                export_country.status = status
+                export_country.modified_by = adviser
+                export_country.modified_on = record_date
+                export_country.save()
         else:
             self.export_countries.create(
                 company=self,

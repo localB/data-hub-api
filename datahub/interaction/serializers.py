@@ -480,18 +480,20 @@ class InteractionSerializer(serializers.ModelSerializer):
                     when=EqualsRule('kind', Interaction.KINDS.service_delivery),
                 ),
                 ValidationRule(
-                    'required',
-                    OperatorRule('were_countries_discussed', bool),
-                    OperatorRule('export_countries', is_not_blank),
-                    when=InRule(
-                        'theme',
-                        [Interaction.THEMES.export, Interaction.THEMES.other],
-                    ),
-                ),
-                ValidationRule(
                     'too_many_contacts_for_event_service_delivery',
                     OperatorRule('contacts', lambda value: len(value) <= 1),
                     when=OperatorRule('is_event', bool),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('export_countries', is_not_blank),
+                    when=AndRule(
+                        OperatorRule('were_countries_discussed', bool),
+                        InRule(
+                            'theme',
+                            [Interaction.THEMES.export, Interaction.THEMES.other],
+                        ),
+                    ),
                 ),
                 # These two rules are only checked for service deliveries as there's a separate
                 # check that event is blank for interactions above which takes precedence (to
