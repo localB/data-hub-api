@@ -542,6 +542,28 @@ class TestAddInteraction(APITestMixin):
                     'were_countries_discussed': ['This field may not be null.'],
                 },
             ),
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.export,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+
+                    'export_countries': None,
+                },
+                {
+                    'were_countries_discussed': ['This field may not be null.'],
+                },
+            ),
             # export_countries cannot be blank when were_countries_discussed is True
             (
                 {
