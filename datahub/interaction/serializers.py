@@ -488,7 +488,7 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'required',
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
-                        OperatorRule('were_countries_discussed', bool),
+                        EqualsRule('were_countries_discussed', True),
                         InRule(
                             'theme',
                             [Interaction.THEMES.export, Interaction.THEMES.other],
