@@ -486,6 +486,14 @@ class InteractionSerializer(serializers.ModelSerializer):
                 ),
                 ValidationRule(
                     'required',
+                    OperatorRule('were_countries_discussed', is_not_blank),
+                    when=InRule(
+                        'theme',
+                        [Interaction.THEMES.export, Interaction.THEMES.other],
+                    ),
+                ),
+                ValidationRule(
+                    'required',
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
                         EqualsRule('were_countries_discussed', True),

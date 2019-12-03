@@ -53,12 +53,10 @@ class TestAddInteraction(APITestMixin):
     @pytest.mark.parametrize(
         'extra_data',
         (
-            # company interaction
-            {
-            },
             # company interaction with export theme
             {
                 'theme': Interaction.THEMES.export,
+                'were_countries_discussed': False,
             },
             # company interaction with investment theme
             {
@@ -90,6 +88,7 @@ class TestAddInteraction(APITestMixin):
                 'policy_feedback_notes': 'Policy feedback notes',
                 'policy_issue_types': [partial(random_obj_for_model, PolicyIssueType)],
             },
+            # export countries in an interaction (export and other)
             {
                 'theme': Interaction.THEMES.export,
                 'were_countries_discussed': True,
@@ -118,19 +117,10 @@ class TestAddInteraction(APITestMixin):
                     },
                 ],
             },
+            # normal interaction with no mention of export countries is valid
             {
-                'theme': Interaction.THEMES.export,
-                'were_countries_discussed': True,
-                'export_countries': [
-                    {
-                        'country': {
-                            'id': constants.Country.canada.value.id,
-                            'name': constants.Country.canada.value.name,
-                        },
-                        'status':
-                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
-                    },
-                ],
+                'were_countries_discussed': False,
+                'export_countries': [],
             },
         ),
     )
@@ -507,6 +497,51 @@ class TestAddInteraction(APITestMixin):
                 },
             ),
 
+            # were_countries_discussed can't be blank for export/other interactions
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.export,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+
+                    'were_countries_discussed': None,
+                },
+                {
+                    'were_countries_discussed': ['This field may not be null.'],
+                },
+            ),
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.other,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': CompanyFactory,
+                    'contacts': [ContactFactory],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+
+                    'were_countries_discussed': None,
+                },
+                {
+                    'were_countries_discussed': ['This field may not be null.'],
+                },
+            ),
             # export_countries cannot be blank when were_countries_discussed is True
             (
                 {
@@ -595,13 +630,11 @@ class TestAddInteraction(APITestMixin):
                     'dit_participants': None,
                     'was_policy_feedback_provided': None,
                     'policy_feedback_notes': None,
-                    'were_countries_discussed': None,
                 },
                 {
                     'dit_participants': ['This field may not be null.'],
                     'was_policy_feedback_provided': ['This field may not be null.'],
                     'policy_feedback_notes': ['This field may not be null.'],
-                    'were_countries_discussed': ['This field may not be null.'],
                 },
             ),
 
