@@ -499,7 +499,7 @@ class InteractionSerializer(serializers.ModelSerializer):
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
                         # EqualsRule(is_feature_flag_active(INTERACTION_ADD_COUNTRIES), True),
-                        EqualsRule('were_countries_discussed', None),
+                        OperatorRule('were_countries_discussed', is_not_blank),
                         EqualsRule('were_countries_discussed', True),
                         InRule(
                             'theme',
