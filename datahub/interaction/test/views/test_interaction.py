@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 from rest_framework.settings import api_settings
 
-from datahub.company.models.company import CompanyExportCountry
+from datahub.company.models import Company, CompanyExportCountry
 from datahub.company.test.factories import (
     AdviserFactory,
     CompanyExportCountryFactory,
@@ -416,8 +416,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -435,8 +437,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -454,8 +458,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -477,8 +483,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -504,8 +512,10 @@ class TestAddInteraction(APITestMixin):
                     'theme': Interaction.THEMES.export,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -526,8 +536,10 @@ class TestAddInteraction(APITestMixin):
                     'theme': Interaction.THEMES.other,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -535,35 +547,13 @@ class TestAddInteraction(APITestMixin):
                     'was_policy_feedback_provided': False,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
                     'was_policy_feedback_provided': False,
-
                     'were_countries_discussed': None,
                 },
                 {
                     'were_countries_discussed': ['This field may not be null.'],
                 },
             ),
-            (
-                {
-                    'kind': Interaction.KINDS.interaction,
-                    'theme': Interaction.THEMES.export,
-                    'date': date.today().isoformat(),
-                    'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
-                    'dit_participants': [
-                        {'adviser': AdviserFactory},
-                    ],
-                    'service': constants.Service.inbound_referral.value.id,
-                    'was_policy_feedback_provided': False,
-                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
-                    'was_policy_feedback_provided': False,
 
-                    'export_countries': None,
-                },
-                {
-                    'were_countries_discussed': ['This field may not be null.'],
-                },
-            ),
             # export_countries cannot be blank when were_countries_discussed is True
             (
                 {
@@ -571,8 +561,10 @@ class TestAddInteraction(APITestMixin):
                     'theme': Interaction.THEMES.export,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -582,10 +574,54 @@ class TestAddInteraction(APITestMixin):
                     'was_policy_feedback_provided': False,
 
                     'were_countries_discussed': True,
-                    'export_countries': [],
+                    'export_countries': None,
                 },
                 {
-                    'export_countries': ['This field is required.'],
+                    'export_countries': ['This field may not be null.'],
+                },
+            ),
+
+            # export_countries cannot have same country more than once for a company
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.export,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
+                    'were_countries_discussed': True,
+                    'export_countries': [
+                        {
+                            'country': {
+                                'id': constants.Country.canada.value.id,
+                                'name': constants.Country.canada.value.name,
+                            },
+                            'status':
+                                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                        },
+                        {
+                            'country': {
+                                'id': constants.Country.canada.value.id,
+                                'name': constants.Country.canada.value.name,
+                            },
+                            'status':
+                                CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                        },
+                    ],
+                },
+                {
+                    'non_field_errors':
+                        ["Same country can't be added more than once to export_countries."],
                 },
             ),
 
@@ -596,8 +632,10 @@ class TestAddInteraction(APITestMixin):
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
                     'notes': 'hello',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -643,8 +681,10 @@ class TestAddInteraction(APITestMixin):
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
                     'notes': 'hello',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'service': constants.Service.inbound_referral.value.id,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
 
@@ -666,8 +706,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -689,8 +731,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -712,8 +756,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
 
@@ -732,8 +778,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {
                             'adviser': AdviserFactory,
@@ -754,8 +802,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {
                             'adviser': AdviserFactory,
@@ -774,8 +824,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],
@@ -795,8 +847,10 @@ class TestAddInteraction(APITestMixin):
                     'kind': Interaction.KINDS.interaction,
                     'date': date.today().isoformat(),
                     'subject': 'whatever',
-                    'company': CompanyFactory,
-                    'contacts': [ContactFactory],
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
                     'dit_participants': [
                         {'adviser': AdviserFactory},
                     ],

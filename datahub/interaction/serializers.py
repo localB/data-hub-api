@@ -32,6 +32,7 @@ from datahub.interaction.models import (
 from datahub.interaction.permissions import HasAssociatedInvestmentProjectValidator
 from datahub.interaction.validators import (
     ContactsBelongToCompanyValidator,
+    DuplicateExportCountryValidator,
     ServiceAnswersValidator,
     StatusChangeValidator,
 )
@@ -40,6 +41,7 @@ from datahub.metadata.models import Country, Service, Team
 from datahub.metadata.serializers import SERVICE_LEAF_NODE_NOT_SELECTED_MESSAGE
 
 INTERACTION_ADD_COUNTRIES = 'interaction-add-countries'
+
 
 class InteractionDITParticipantListSerializer(serializers.ListSerializer):
     """Interaction DIT participant list serialiser that adds validation for duplicates."""
@@ -425,6 +427,7 @@ class InteractionSerializer(serializers.ModelSerializer):
             ContactsBelongToCompanyValidator(),
             StatusChangeValidator(),
             ServiceAnswersValidator(),
+            DuplicateExportCountryValidator(),
             RulesBasedValidator(
                 ValidationRule(
                     'required',
@@ -442,7 +445,6 @@ class InteractionSerializer(serializers.ModelSerializer):
                 ValidationRule(
                     'invalid_for_investment',
                     EqualsRule('kind', Interaction.KINDS.interaction),
-                    OperatorRule('were_countries_discussed', not_),
                     when=EqualsRule('theme', Interaction.THEMES.investment),
                 ),
                 ValidationRule(
@@ -486,27 +488,6 @@ class InteractionSerializer(serializers.ModelSerializer):
                     OperatorRule('contacts', lambda value: len(value) <= 1),
                     when=OperatorRule('is_event', bool),
                 ),
-                ValidationRule(
-                    'required',
-                    OperatorRule('were_countries_discussed', is_not_blank),
-                    when=InRule(
-                        'theme',
-                        [Interaction.THEMES.export, Interaction.THEMES.other],
-                    ),
-                ),
-                ValidationRule(
-                    'required',
-                    OperatorRule('export_countries', is_not_blank),
-                    when=AndRule(
-                        # EqualsRule(is_feature_flag_active(INTERACTION_ADD_COUNTRIES), True),
-                        OperatorRule('were_countries_discussed', is_not_blank),
-                        EqualsRule('were_countries_discussed', True),
-                        InRule(
-                            'theme',
-                            [Interaction.THEMES.export, Interaction.THEMES.other],
-                        ),
-                    ),
-                ),
                 # These two rules are only checked for service deliveries as there's a separate
                 # check that event is blank for interactions above which takes precedence (to
                 # avoid duplicate or contradictory error messages)
@@ -526,5 +507,59 @@ class InteractionSerializer(serializers.ModelSerializer):
                         EqualsRule('kind', Interaction.KINDS.service_delivery),
                     ),
                 ),
+                ValidationRule(
+                    'invalid_for_investment',
+                    OperatorRule('were_countries_discussed', not_),
+                    when=EqualsRule('theme', Interaction.THEMES.investment),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('were_countries_discussed', is_not_blank),
+                    when=InRule(
+                        'theme',
+                        [Interaction.THEMES.export, Interaction.THEMES.other],
+                    ),
+                ),
+                ValidationRule(
+                    'required',
+                    OperatorRule('export_countries', is_not_blank),
+                    when=AndRule(
+                        EqualsRule('were_countries_discussed', is_not_blank),
+                        EqualsRule('were_countries_discussed', True),
+                        InRule(
+                            'theme',
+                            [Interaction.THEMES.export, Interaction.THEMES.other],
+                        ),
+                    ),
+                ),
             ),
         ]
+
+        # if is_feature_flag_active(INTERACTION_ADD_COUNTRIES):
+        #     validators.append(
+        #         ValidationRule(
+        #             'invalid_for_investment',
+        #             OperatorRule('were_countries_discussed', not_),
+        #             when=EqualsRule('theme', Interaction.THEMES.investment),
+        #         ),
+        #         ValidationRule(
+        #             'required',
+        #             OperatorRule('were_countries_discussed', is_not_blank),
+        #             when=InRule(
+        #                 'theme',
+        #                 [Interaction.THEMES.export, Interaction.THEMES.other],
+        #             ),
+        #         ),
+        #         ValidationRule(
+        #             'required',
+        #             OperatorRule('export_countries', is_not_blank),
+        #             when=AndRule(
+        #                 EqualsRule('were_countries_discussed', is_not_blank),
+        #                 EqualsRule('were_countries_discussed', True),
+        #                 InRule(
+        #                     'theme',
+        #                     [Interaction.THEMES.export, Interaction.THEMES.other],
+        #                 ),
+        #             ),
+        #         ),
+        #     )
