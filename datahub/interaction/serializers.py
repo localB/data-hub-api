@@ -19,6 +19,7 @@ from datahub.core.validators import (
     ValidationRule,
 )
 from datahub.event.models import Event
+from datahub.feature_flag.utils import is_feature_flag_active
 from datahub.interaction.models import (
     CommunicationChannel,
     Interaction,
@@ -38,6 +39,7 @@ from datahub.investment.project.serializers import NestedInvestmentProjectField
 from datahub.metadata.models import Country, Service, Team
 from datahub.metadata.serializers import SERVICE_LEAF_NODE_NOT_SELECTED_MESSAGE
 
+INTERACTION_ADD_COUNTRIES = 'interaction-add-countries'
 
 class InteractionDITParticipantListSerializer(serializers.ListSerializer):
     """Interaction DIT participant list serialiser that adds validation for duplicates."""
@@ -496,7 +498,8 @@ class InteractionSerializer(serializers.ModelSerializer):
                     'required',
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
-                        OperatorRule('were_countries_discussed', is_not_blank),
+                        # EqualsRule(is_feature_flag_active(INTERACTION_ADD_COUNTRIES), True),
+                        EqualsRule('were_countries_discussed', None),
                         EqualsRule('were_countries_discussed', True),
                         InRule(
                             'theme',
