@@ -14,6 +14,7 @@ from datahub.core.validators import (
     AndRule,
     EqualsRule,
     InRule,
+    IsObjectBeingCreated,
     OperatorRule,
     RulesBasedValidator,
     ValidationRule,
@@ -518,13 +519,16 @@ class InteractionSerializer(serializers.ModelSerializer):
                 ValidationRule(
                     'required',
                     OperatorRule('were_countries_discussed', is_not_blank),
-                    when=InRule(
-                        'theme',
-                        [Interaction.THEMES.export, Interaction.THEMES.other],
+                    when=AndRule(
+                        IsObjectBeingCreated(),
+                        InRule(
+                            'theme',
+                            [Interaction.THEMES.export, Interaction.THEMES.other],
+                        ),
                     ),
                 ),
                 ValidationRule(
-                    'export_countries_cant_be_null',
+                    'export_countries_cant_be_empty',
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
                         EqualsRule('were_countries_discussed', is_not_blank),

@@ -577,7 +577,7 @@ class TestAddInteraction(APITestMixin):
                     'export_countries': None,
                 },
                 {
-                    'export_countries': ['This field may not be null.'],
+                    'export_countries': ['You must enter at least one country that you discussed.'],
                 },
             ),
 
@@ -1486,6 +1486,7 @@ class TestUpdateInteraction(APITestMixin):
         response = api_client.patch(
             url,
             data={
+                'were_countries_discussed': None,
                 'export_countries': [
                     {
                         'country': {

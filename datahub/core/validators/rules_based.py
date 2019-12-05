@@ -36,6 +36,16 @@ class BaseRule(AbstractRule):
         return self._field
 
 
+class IsObjectBeingCreated(BaseRule):
+    """Rule to check if a field is being updated."""
+
+    def __call__(self, combiner) -> bool:
+        """
+        Returns True if the object is being created.
+        """
+        return not combiner.instance
+
+
 class IsFieldBeingUpdatedRule(BaseRule):
     """Rule to check if a field is being updated."""
 
