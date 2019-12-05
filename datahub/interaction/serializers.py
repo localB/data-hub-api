@@ -168,9 +168,6 @@ class InteractionSerializer(serializers.ModelSerializer):
         'cannot_unset_theme': gettext_lazy(
             "A theme can't be removed once set.",
         ),
-        'export_countries_cant_be_null': gettext_lazy(
-            'You must enter at least one country that you discussed.',
-        ),
     }
 
     company = NestedRelatedField(Company)
@@ -528,7 +525,7 @@ class InteractionSerializer(serializers.ModelSerializer):
                     ),
                 ),
                 ValidationRule(
-                    'export_countries_cant_be_empty',
+                    'required',
                     OperatorRule('export_countries', is_not_blank),
                     when=AndRule(
                         EqualsRule('were_countries_discussed', is_not_blank),

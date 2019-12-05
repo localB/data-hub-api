@@ -577,7 +577,7 @@ class TestAddInteraction(APITestMixin):
                     'export_countries': None,
                 },
                 {
-                    'export_countries': ['You must enter at least one country that you discussed.'],
+                    'export_countries': ['This field may not be null.'],
                 },
             ),
 
@@ -1469,6 +1469,33 @@ class TestUpdateInteraction(APITestMixin):
 
     @pytest.mark.parametrize('permissions', NON_RESTRICTED_CHANGE_PERMISSIONS)
     @freeze_time('2017-04-18 13:25:30.986208')
+    def test_no_validation_for_update_export_countries(self, permissions):
+        """Test that a user can't update export countries in an interaction."""
+        requester = create_test_user(permission_codenames=permissions)
+        interaction = ExportCountriesInteractionFactory()
+
+        api_client = self.create_api_client(user=requester)
+        url = reverse('api-v3:interaction:item', kwargs={'pk': interaction.pk})
+        response = api_client.patch(
+            url,
+            data={
+                'export_countries': [
+                    {
+                        'country': {
+                            'id': constants.Country.canada.value.id,
+                            'name': constants.Country.canada.value.name,
+                        },
+                        'status':
+                            CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                    },
+                ],
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+
+    @pytest.mark.parametrize('permissions', NON_RESTRICTED_CHANGE_PERMISSIONS)
+    @freeze_time('2017-04-18 13:25:30.986208')
     def test_cant_update_export_countries(self, permissions):
         """Test that a user can't update export countries in an interaction."""
         requester = create_test_user(permission_codenames=permissions)
@@ -1486,7 +1513,6 @@ class TestUpdateInteraction(APITestMixin):
         response = api_client.patch(
             url,
             data={
-                'were_countries_discussed': None,
                 'export_countries': [
                     {
                         'country': {
