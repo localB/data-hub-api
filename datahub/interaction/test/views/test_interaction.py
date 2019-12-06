@@ -209,7 +209,7 @@ class TestAddInteraction(APITestMixin):
             'service_answers': None,
             'investment_project': request_data.get('investment_project'),
             'archived_documents_url_path': '',
-            'were_countries_discussed': request_data.get('were_countries_discussed', False),
+            'were_countries_discussed': request_data.get('were_countries_discussed', None),
             'export_countries': request_data.get('export_countries', []),
             'created_by': {
                 'id': str(adviser.pk),
@@ -527,7 +527,7 @@ class TestAddInteraction(APITestMixin):
                     'were_countries_discussed': None,
                 },
                 {
-                    'were_countries_discussed': ['This field may not be null.'],
+                    'were_countries_discussed': ['This field is required.'],
                 },
             ),
             (
@@ -550,7 +550,7 @@ class TestAddInteraction(APITestMixin):
                     'were_countries_discussed': None,
                 },
                 {
-                    'were_countries_discussed': ['This field may not be null.'],
+                    'were_countries_discussed': ['This field is required.'],
                 },
             ),
 
