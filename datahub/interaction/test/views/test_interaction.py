@@ -19,6 +19,8 @@ from datahub.company.test.factories import (
 from datahub.core import constants
 from datahub.core.test_utils import APITestMixin, create_test_user, random_obj_for_model
 from datahub.event.test.factories import EventFactory
+from datahub.feature_flag.test.factories import FeatureFlagFactory
+from datahub.interaction.constants import INTERACTION_ADD_COUNTRIES
 from datahub.interaction.models import (
     CommunicationChannel,
     Interaction,
@@ -522,8 +524,6 @@ class TestAddInteraction(APITestMixin):
                     'service': constants.Service.inbound_referral.value.id,
                     'was_policy_feedback_provided': False,
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
-                    'was_policy_feedback_provided': False,
-
                     'were_countries_discussed': None,
                 },
                 {
@@ -548,6 +548,28 @@ class TestAddInteraction(APITestMixin):
                     'communication_channel': partial(random_obj_for_model, CommunicationChannel),
                     'was_policy_feedback_provided': False,
                     'were_countries_discussed': None,
+                },
+                {
+                    'were_countries_discussed': ['This field is required.'],
+                },
+            ),
+            (
+                {
+                    'kind': Interaction.KINDS.interaction,
+                    'theme': Interaction.THEMES.export,
+                    'date': date.today().isoformat(),
+                    'subject': 'whatever',
+                    'company': lambda: CompanyFactory(name='Martian Island'),
+                    'contacts': [
+                        lambda: ContactFactory(company=Company.objects.get(name='Martian Island')),
+                    ],
+                    'dit_participants': [
+                        {'adviser': AdviserFactory},
+                    ],
+                    'service': constants.Service.inbound_referral.value.id,
+                    'was_policy_feedback_provided': False,
+                    'communication_channel': partial(random_obj_for_model, CommunicationChannel),
+                    'was_policy_feedback_provided': False,
                 },
                 {
                     'were_countries_discussed': ['This field is required.'],
@@ -868,6 +890,7 @@ class TestAddInteraction(APITestMixin):
     )
     def test_validation(self, data, errors):
         """Test validation errors."""
+        FeatureFlagFactory(code=INTERACTION_ADD_COUNTRIES, is_active=True)
         data = resolve_data(data)
         url = reverse('api-v3:interaction:collection')
         response = self.api_client.post(url, data)

@@ -8,6 +8,7 @@ from rest_framework import serializers
 from rest_framework.settings import api_settings
 
 from datahub.core.validate_utils import DataCombiner, is_blank, is_not_blank
+from datahub.feature_flag.utils import is_feature_flag_active
 
 
 class AbstractRule(ABC):
@@ -44,6 +45,16 @@ class IsObjectBeingCreated(BaseRule):
         Returns True if the object is being created.
         """
         return not combiner.instance
+
+
+class IsFeatureFlagActive(BaseRule):
+    """Rule to check if feature flag is active."""
+
+    def __call__(self, combiner) -> bool:
+        """
+        Returns True if the feature flag is active.
+        """
+        return is_feature_flag_active(self.field)
 
 
 class IsFieldBeingUpdatedRule(BaseRule):
