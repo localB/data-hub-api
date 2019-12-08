@@ -296,8 +296,6 @@ class Interaction(ArchivableModel, BaseModel):
     )
     policy_feedback_notes = models.TextField(blank=True, default='')
     # export countries
-    were_countries_discussed = models.BooleanField(default=False)
-
     were_countries_discussed = models.BooleanField(null=True)
 
     @property
