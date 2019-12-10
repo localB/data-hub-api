@@ -9,7 +9,7 @@ from django.core.validators import (
     MinLengthValidator,
     MinValueValidator,
 )
-from django.db import models
+from django.db import models, transaction
 from django.utils.timezone import now
 from model_utils import Choices
 from mptt.fields import TreeForeignKey
@@ -418,6 +418,59 @@ class Company(ArchivableModel, BaseModel):
         self.one_list_account_owner = None
         self.one_list_tier = None
         self.save()
+
+    @transaction.atomic
+    def add_export_country(self, country, status, record_date, adviser):
+        """
+        Add a company export_country, if it doesn't exist.
+        If the company already exists and incoming status is different
+        check if incoming record is newer and update.
+        """
+        export_country, created = CompanyExportCountry.objects.get_or_create(
+            country=country,
+            company=self,
+            defaults={
+                'status': status,
+                'created_by': adviser,
+                'modified_by': adviser,
+                'modified_on': record_date,
+            },
+        )
+
+        if created:
+            self._record_export_country_history(
+                export_country,
+                CompanyExportCountryHistory.HISTORY_TYPES.insert,
+            )
+        else:
+            if export_country.status is not status and export_country.modified_on < record_date:
+                export_country.status = status
+                export_country.modified_by = adviser
+                export_country.modified_on = record_date
+                export_country.save()
+
+                self._record_export_country_history(
+                    export_country,
+                    CompanyExportCountryHistory.HISTORY_TYPES.update,
+                )
+
+    def _record_export_country_history(self, export_country, action):
+        """
+        Records each change made to `CompanyExportCountry` model
+        along with type of change, insert, update or delete.
+        """
+        CompanyExportCountryHistory.create(
+            history_user=export_country.modified_by,
+            history_type=action,
+            id=export_country.id,
+            company=self,
+            country=export_country.country,
+            status=export_country.status,
+            created_on=export_country.created_on,
+            created_by=export_country.created_by,
+            modified_on=export_country.modified_on,
+            modified_by=export_country.modified_by,
+        )
 
 
 class OneListCoreTeamMember(models.Model):
