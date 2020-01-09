@@ -9,7 +9,8 @@ from datahub.company.constants import (
     BusinessTypeConstant,
     NOTIFY_DNB_INVESTIGATION_FEATURE_FLAG,
 )
-from datahub.company.test.factories import CompanyFactory
+from datahub.company.models import CompanyExportCountryHistory
+from datahub.company.test.factories import CompanyExportCountryFactory, CompanyFactory
 from datahub.feature_flag.test.factories import FeatureFlagFactory
 from datahub.metadata.models import BusinessType
 from datahub.notification.core import notify_gateway
@@ -85,3 +86,12 @@ class TestNotifyDNBInvestigationPostSave:
         company.name = 'foobar'
         company.save()
         client.send_email_notification.assert_not_called()
+
+    def test_company_export_country_history_create(self):
+        """
+        Test that creating new CompanyExportCountry record
+        sets up a corresponding history record.
+        """
+        export_country = CompanyExportCountryFactory()
+        history = CompanyExportCountryHistory.objects.filter(id=export_country.id)
+        assert len(history) == 1

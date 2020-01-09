@@ -437,22 +437,11 @@ class Company(ArchivableModel, BaseModel):
             },
         )
 
-        if created:
-            self._record_export_country_history(
-                export_country,
-                CompanyExportCountryHistory.HISTORY_TYPES.insert,
-            )
-        else:
-            if export_country.status is not status and export_country.modified_on < record_date:
-                export_country.status = status
-                export_country.modified_by = adviser
-                export_country.modified_on = record_date
-                export_country.save()
-
-                self._record_export_country_history(
-                    export_country,
-                    CompanyExportCountryHistory.HISTORY_TYPES.update,
-                )
+        if export_country.status is not status and export_country.modified_on < record_date:
+            export_country.status = status
+            export_country.modified_by = adviser
+            export_country.modified_on = record_date
+            export_country.save()
 
     def _record_export_country_history(self, export_country, action):
         """
