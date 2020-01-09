@@ -197,3 +197,19 @@ class CompanyExportCountryFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = 'company.CompanyExportCountry'
+
+
+class CompanyExportCountryHistoryFactory(factory.django.DjangoModelFactory):
+    """Factory for Company export country history"""
+
+    export_country = CompanyExportCountryFactory()
+    history_id = factory.LazyFunction(uuid.uuid4)
+    id = export_country.id
+    company = export_country.company
+    country = export_country.country
+    status = export_country.status
+    history_user = export_country.created_by
+
+    class Meta:
+        model = 'company.CompanyExportCountryHistory'
+

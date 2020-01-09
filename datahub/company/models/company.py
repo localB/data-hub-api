@@ -466,10 +466,6 @@ class Company(ArchivableModel, BaseModel):
             company=self,
             country=export_country.country,
             status=export_country.status,
-            created_on=export_country.created_on,
-            created_by=export_country.created_by,
-            modified_on=export_country.modified_on,
-            modified_by=export_country.modified_by,
         )
 
 
@@ -623,20 +619,12 @@ class CompanyExportCountryHistory(models.Model):
         max_length=settings.CHAR_FIELD_MAX_LENGTH,
         choices=CompanyExportCountry.EXPORT_INTEREST_STATUSES,
     )
-    created_on = models.DateTimeField(null=True, blank=True)
-    modified_on = models.DateTimeField(null=True, blank=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
-    modified_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='+',
-    )
 
     class Meta:
         verbose_name_plural = 'company export country history'
+
+    def __str__(self):
+        """Admin displayed human readable name"""
+        return (
+            f'{self.company} {self.country} {self.status}'
+        )
