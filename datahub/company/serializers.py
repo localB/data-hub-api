@@ -686,3 +686,16 @@ class OneListCoreTeamMemberSerializer(serializers.Serializer):
 
     adviser = NestedAdviserWithEmailAndTeamGeographyField()
     is_global_account_manager = serializers.BooleanField()
+
+
+class CompanyExportCountryHistorySerializer(serializers.Serializer):
+    """Company Export History Timeline Serializer"""
+
+    class Meta(CompanySerializer.Meta):
+        fields = (
+            'history_user',
+            'country',
+            'company',
+        )
+        permissions = {}
+        read_only_fields = fields

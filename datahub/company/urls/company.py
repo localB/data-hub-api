@@ -2,6 +2,7 @@ from django.urls import path
 
 from datahub.company.views import (
     CompanyAuditViewSet,
+    CompanyExportHistoryViewSet,
     CompanyViewSet,
     OneListGroupCoreTeamViewSet,
     PublicCompanyViewSet,
@@ -41,6 +42,18 @@ public_company_item = PublicCompanyViewSet.as_view({
     'get': 'retrieve',
 })
 
+company_export_history = CompanyExportHistoryViewSet.as_view({
+    'get': 'retrieve',
+})
+
+# country_export_history = CompanyExportHistoryReadOnlyViewSet.as_view({
+#     'get': 'retrieve',
+# })
+#
+# latest_export_history = CompanyExportHistoryReadOnlyViewSet.as_view({
+#     'get': 'retrieve',
+# })
+
 urls = [
     path('company', company_collection, name='collection'),
     path('company/<uuid:pk>', company_item, name='item'),
@@ -63,4 +76,19 @@ urls = [
         name='one-list-group-core-team',
     ),
     path('public/company/<uuid:pk>', public_company_item, name='public-item'),
+    path(
+        'company/<uuid:pk>/company-export-history/',
+        company_export_history,
+        name='company_export_history',
+    ),
+    # path(
+    #     'company/<uuid:pk>/company-export-history/latest',
+    #     latest_export_history,
+    #     name='latest_export_history'
+    # ),
+    # path(
+    #     'company/<uuid:pk>/country-export-history/',
+    #     country_export_history,
+    #     name='country_export_history'
+    # ),
 ]

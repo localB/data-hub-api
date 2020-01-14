@@ -12,12 +12,14 @@ from datahub.company.autocomplete import AutocompleteFilter
 from datahub.company.models import (
     Advisor,
     Company,
+    CompanyExportCountryHistory,
     CompanyPermission,
     Contact,
 )
 from datahub.company.queryset import get_contact_queryset
 from datahub.company.serializers import (
     AdviserSerializer,
+    CompanyExportCountryHistorySerializer,
     CompanySerializer,
     ContactSerializer,
     OneListCoreTeamMemberSerializer,
@@ -282,3 +284,18 @@ class AdviserReadOnlyViewSetV1(
             return filtered_queryset.order_by(*self._default_ordering)
 
         return filtered_queryset
+
+
+class CompanyExportHistoryViewSet(CoreViewSet):
+    """Company Export History Serializer"""
+
+    # required_scopes = (Scope.internal_front_end,)
+    serializer_class = CompanyExportCountryHistorySerializer
+
+    # queryset = CompanyExportCountryHistory.objects.select_related(
+    #     'history_user',
+    #     'country',
+    #     'company'
+    # )
+
+    queryset = CompanyExportCountryHistory.objects.all()
