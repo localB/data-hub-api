@@ -43,7 +43,7 @@ public_company_item = PublicCompanyViewSet.as_view({
 })
 
 company_export_history = CompanyExportHistoryViewSet.as_view({
-    'get': 'retrieve',
+    'get': 'list',
 })
 
 # country_export_history = CompanyExportHistoryReadOnlyViewSet.as_view({
@@ -77,7 +77,7 @@ urls = [
     ),
     path('public/company/<uuid:pk>', public_company_item, name='public-item'),
     path(
-        'company/<uuid:pk>/company-export-history/',
+        'company/<uuid:company_pk>/company-export-history/',
         company_export_history,
         name='company_export_history',
     ),

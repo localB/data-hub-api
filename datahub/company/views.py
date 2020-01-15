@@ -298,4 +298,23 @@ class CompanyExportHistoryViewSet(CoreViewSet):
     #     'company'
     # )
 
+    def initial(self, request, *args, **kwargs):
+        """
+        Raise an Http404 if there is no project corresponding to the project ID specified in
+        the URL path.
+        """
+        super().initial(request, *args, **kwargs)
+
+        # if not InvestmentProject.objects.filter(pk=self.kwargs['project_pk']).exists():
+        #     raise Http404(self.non_existent_project_error_message)
+
+    def filter_queryset(self, queryset):
+        """Filter the queryset to the project specified in the URL path."""
+        filtered_queryset = super().filter_queryset(queryset)
+
+        return filtered_queryset.filter(
+            company_id=self.kwargs['company_pk'],
+        )
+
     queryset = CompanyExportCountryHistory.objects.all()
+    # queryset = Company.objects.all()

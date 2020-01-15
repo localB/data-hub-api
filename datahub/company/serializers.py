@@ -12,6 +12,7 @@ from datahub.company.models import (
     Advisor,
     Company,
     CompanyExportCountry,
+    CompanyExportCountryHistory,
     CompanyPermission,
     Contact,
     ContactPermission,
@@ -688,14 +689,43 @@ class OneListCoreTeamMemberSerializer(serializers.Serializer):
     is_global_account_manager = serializers.BooleanField()
 
 
-class CompanyExportCountryHistorySerializer(serializers.Serializer):
-    """Company Export History Timeline Serializer"""
+class CompanyExportCountryHistorySerializer(PermittedFieldsModelSerializer):
+    """
+    Company Export History Timeline read serializer
+    """
 
-    class Meta(CompanySerializer.Meta):
+    # 'history_id',
+    # 'history_date',
+    # 'history_type',
+    # 'id',
+    # 'status',
+    # 'company_id'
+    # 'country_id'
+    # 'history_user_id'
+
+    history_user = NestedAdviserField(read_only=True)
+    company = NestedRelatedField(
+        Company,
+        read_only=True, allow_null=True,
+    )
+    country = NestedRelatedField(
+        meta_models.Country, required=False, allow_null=True,
+    )
+    # history_type = ChoiceField(
+    #     meta_models.Title, required=False, allow_null=True,
+    # )
+
+    # uk_region = NestedRelatedField(
+    #     meta_models.UKRegion, required=False, allow_null=True,
+    # )
+
+    class Meta:
+        model = CompanyExportCountryHistory
         fields = (
-            'history_user',
-            'country',
             'company',
+            'country',
+            'history_type',
+            'history_user',
         )
         permissions = {}
         read_only_fields = fields
