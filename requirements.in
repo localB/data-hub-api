@@ -1,5 +1,5 @@
 # Django and django related
-Django==2.2.9
+git+https://github.com/django/django.git@stable/3.0.x#egg=django
 djangorestframework==3.11.0
 django-environ==0.4.5
 django-extensions==2.2.6
