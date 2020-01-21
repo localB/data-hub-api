@@ -1391,11 +1391,11 @@ class TestCompaniesToCompanyExportCountryModel(APITestMixin):
         (
             (
                 'export_to_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                CompanyExportCountry.Status.CURRENTLY_EXPORTING,
             ),
             (
                 'future_interest_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                CompanyExportCountry.Status.FUTURE_INTEREST,
             ),
         ),
     )
@@ -1430,11 +1430,11 @@ class TestCompaniesToCompanyExportCountryModel(APITestMixin):
         (
             (
                 'export_to_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                CompanyExportCountry.Status.CURRENTLY_EXPORTING,
             ),
             (
                 'future_interest_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                CompanyExportCountry.Status.FUTURE_INTEREST,
             ),
         ),
     )
@@ -1483,11 +1483,11 @@ class TestCompaniesToCompanyExportCountryModel(APITestMixin):
         (
             (
                 'export_to_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                CompanyExportCountry.Status.CURRENTLY_EXPORTING,
             ),
             (
                 'future_interest_countries',
-                CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                CompanyExportCountry.Status.FUTURE_INTEREST,
             ),
         ),
     )
@@ -1552,14 +1552,14 @@ class TestCompaniesToCompanyExportCountryModel(APITestMixin):
             CompanyExportCountryFactory(
                 country=country,
                 company=company,
-                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                status=CompanyExportCountry.Status.FUTURE_INTEREST,
             )
 
         for country in initial_export_to_countries:
             CompanyExportCountryFactory(
                 country=country,
                 company=company,
-                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                status=CompanyExportCountry.Status.CURRENTLY_EXPORTING,
             )
 
         new_countries = list(CountryModel.objects.order_by('?')[:5])
@@ -1590,14 +1590,14 @@ class TestCompaniesToCompanyExportCountryModel(APITestMixin):
 
         actual_export_to_countries = CompanyExportCountry.objects.filter(
             company=company,
-            status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+            status=CompanyExportCountry.Status.CURRENTLY_EXPORTING,
         ).order_by(
             'country__pk',
         )
 
         actual_future_interest_countries = CompanyExportCountry.objects.filter(
             company=company,
-            status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+            status=CompanyExportCountry.Status.FUTURE_INTEREST,
         ).order_by(
             'country__pk',
         )

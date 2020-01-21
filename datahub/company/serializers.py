@@ -307,7 +307,7 @@ class CompanySerializer(PermittedFieldsModelSerializer):
                 company=instance,
                 adviser=adviser,
                 export_countries=future_interest_countries,
-                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.future_interest,
+                status=CompanyExportCountry.Status.FUTURE_INTEREST,
             )
 
         if export_to_countries is not None:
@@ -315,7 +315,7 @@ class CompanySerializer(PermittedFieldsModelSerializer):
                 company=instance,
                 adviser=adviser,
                 export_countries=export_to_countries,
-                status=CompanyExportCountry.EXPORT_INTEREST_STATUSES.currently_exporting,
+                status=CompanyExportCountry.Status.CURRENTLY_EXPORTING,
             )
 
         CompanyExportCountry.objects.filter(

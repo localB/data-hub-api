@@ -191,7 +191,7 @@ class InteractionExportCountryFactory(factory.django.DjangoModelFactory):
     id = factory.LazyFunction(uuid4)
     interaction = factory.SubFactory(CompanyInteractionFactory)
     country = factory.LazyFunction(lambda: random_obj_for_model(Country))
-    status = factory.Iterator(tuple(CompanyExportCountry.EXPORT_INTEREST_STATUSES._db_values))
+    status = factory.Iterator(CompanyExportCountry.Status.values)
     created_on = now()
     created_by = factory.SubFactory(AdviserFactory)
 
