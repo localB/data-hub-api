@@ -134,7 +134,7 @@ class SPIReport:
         return (
             project_manager
             and project_manager.dit_team
-            and Team.TAGS.investment_services_team in project_manager.dit_team.tags
+            and Team.Tag.INVESTMENT_SERVICES_TEAM in project_manager.dit_team.tags
         )
 
     def _find_when_project_moved_to_won(self, investment_project):
@@ -158,7 +158,7 @@ class SPIReport:
         if ist_only:
             # Only teams tagged with investment services team
             qs = qs.filter(
-                created_by__dit_team__tags__overlap=[Team.TAGS.investment_services_team],
+                created_by__dit_team__tags__overlap=[Team.Tag.INVESTMENT_SERVICES_TEAM],
             )
         return qs.order_by('created_on')
 
