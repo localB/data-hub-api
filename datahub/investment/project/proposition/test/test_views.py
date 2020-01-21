@@ -128,7 +128,7 @@ class TestCreateProposition(APITestMixin):
                 'id': str(adviser.pk),
             },
             'deadline': '2018-02-10',
-            'status': PropositionStatus.ongoing,
+            'status': PropositionStatus.ONGOING,
             'name': 'My proposition.',
             'scope': 'Very broad scope.',
             'details': '',
@@ -221,7 +221,7 @@ class TestCreateProposition(APITestMixin):
                 'id': str(adviser.pk),
             },
             'deadline': '2018-02-10',
-            'status': PropositionStatus.ongoing,
+            'status': PropositionStatus.ONGOING,
             'name': 'My proposition.',
             'scope': 'Very broad scope.',
             'details': '',
@@ -488,17 +488,17 @@ class TestListPropositions(APITestMixin):
     @pytest.mark.parametrize(
         'proposition_status',
         (
-            PropositionStatus.ongoing,
-            PropositionStatus.abandoned,
-            PropositionStatus.completed,
+            PropositionStatus.ONGOING,
+            PropositionStatus.ABANDONED,
+            PropositionStatus.COMPLETED,
         ),
     )
     def test_filtered_by_status(self, proposition_status):
         """List of propositions filtered by status."""
         statuses = (
-            PropositionStatus.ongoing,
-            PropositionStatus.abandoned,
-            PropositionStatus.completed,
+            PropositionStatus.ONGOING,
+            PropositionStatus.ABANDONED,
+            PropositionStatus.COMPLETED,
         )
         investment_project = InvestmentProjectFactory()
         PropositionFactory.create_batch(
@@ -573,7 +573,7 @@ class TestGetProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.ongoing,
+            'status': PropositionStatus.ONGOING,
             'name': proposition.name,
             'scope': proposition.scope,
             'details': '',
@@ -635,7 +635,7 @@ class TestGetProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.ongoing,
+            'status': PropositionStatus.ONGOING,
             'name': proposition.name,
             'scope': proposition.scope,
             'details': '',
@@ -787,7 +787,7 @@ class TestCompleteProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.completed,
+            'status': PropositionStatus.COMPLETED,
             'name': proposition.name,
             'scope': proposition.scope,
             'created_on': format_date_or_datetime(proposition.created_on),
@@ -882,7 +882,7 @@ class TestCompleteProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.completed,
+            'status': PropositionStatus.COMPLETED,
             'name': proposition.name,
             'scope': proposition.scope,
             'created_on': format_date_or_datetime(proposition.created_on),
@@ -945,7 +945,7 @@ class TestCompleteProposition(APITestMixin):
 
     @pytest.mark.parametrize(
         'proposition_status', (
-            PropositionStatus.completed, PropositionStatus.abandoned,
+            PropositionStatus.COMPLETED, PropositionStatus.ABANDONED,
         ),
     )
     def test_cannot_complete_proposition_without_ongoing_status(self, proposition_status):
@@ -998,7 +998,7 @@ class TestCompleteProposition(APITestMixin):
         response_data = response.json()
         assert response_data['non_field_errors'] == ['Proposition has no documents uploaded.']
         proposition.refresh_from_db()
-        assert proposition.status == PropositionStatus.ongoing
+        assert proposition.status == PropositionStatus.ONGOING
 
 
 class TestAbandonProposition(APITestMixin):
@@ -1043,7 +1043,7 @@ class TestAbandonProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.abandoned,
+            'status': PropositionStatus.ABANDONED,
             'name': proposition.name,
             'scope': proposition.scope,
             'created_on': format_date_or_datetime(proposition.created_on),
@@ -1137,7 +1137,7 @@ class TestAbandonProposition(APITestMixin):
                 'id': str(proposition.adviser.pk),
             },
             'deadline': proposition.deadline.isoformat(),
-            'status': PropositionStatus.abandoned,
+            'status': PropositionStatus.ABANDONED,
             'name': proposition.name,
             'scope': proposition.scope,
             'created_on': format_date_or_datetime(proposition.created_on),
@@ -1200,7 +1200,7 @@ class TestAbandonProposition(APITestMixin):
 
     @pytest.mark.parametrize(
         'proposition_status', (
-            PropositionStatus.completed, PropositionStatus.abandoned,
+            PropositionStatus.COMPLETED, PropositionStatus.ABANDONED,
         ),
     )
     def test_cannot_abandon_proposition_without_ongoing_status(self, proposition_status):
@@ -1250,7 +1250,7 @@ class TestAbandonProposition(APITestMixin):
         response_data = response.json()
         assert response_data['details'] == ['This field may not be blank.']
         proposition.refresh_from_db()
-        assert proposition.status == PropositionStatus.ongoing
+        assert proposition.status == PropositionStatus.ONGOING
 
 
 @pytest.mark.parametrize('http_method', ('get', 'post'))

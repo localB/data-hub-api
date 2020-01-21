@@ -18,7 +18,7 @@ class PropositionFactory(factory.django.DjangoModelFactory):
     adviser = factory.SubFactory(AdviserFactory)
 
     deadline = factory.Faker('future_date')
-    status = PropositionStatus.ongoing
+    status = PropositionStatus.ONGOING
 
     name = factory.Faker('text')
     scope = factory.Faker('text')

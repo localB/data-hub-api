@@ -175,7 +175,7 @@ class SPIReport:
         for proposition in propositions:
             formatted.append(proposition.deadline.isoformat())
             formatted.append(proposition.status)
-            if proposition.status == PropositionStatus.ongoing:
+            if proposition.status == PropositionStatus.ONGOING:
                 modified_on = ''
             else:
                 modified_on = proposition.modified_on.isoformat()
