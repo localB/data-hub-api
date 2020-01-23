@@ -46,7 +46,7 @@ class RequestedRefundFactory(factory.django.DjangoModelFactory):
     modified_by = factory.SelfAttribute('created_by')
     order = factory.SubFactory(OrderPaidFactory)
     reference = factory.Faker('pystr')
-    status = RefundStatus.requested
+    status = RefundStatus.REQUESTED
     requested_on = factory.Faker('date_time', tzinfo=utc)
     requested_by = factory.SubFactory(AdviserFactory)
     refund_reason = factory.Faker('text')
@@ -61,7 +61,7 @@ class RequestedRefundFactory(factory.django.DjangoModelFactory):
 class ApprovedRefundFactory(RequestedRefundFactory):
     """Factory for refund requested, approved and paid."""
 
-    status = RefundStatus.approved
+    status = RefundStatus.APPROVED
 
     level1_approved_on = factory.Faker('date_time', tzinfo=utc)
     level1_approved_by = factory.SelfAttribute('created_by')
@@ -88,6 +88,6 @@ class ApprovedRefundFactory(RequestedRefundFactory):
 class RejectedRefundFactory(RequestedRefundFactory):
     """Factory for refund requested and rejected."""
 
-    status = RefundStatus.rejected
+    status = RefundStatus.REJECTED
 
     rejection_reason = factory.Faker('text')
