@@ -50,6 +50,6 @@ class DuplicateExportCountryValidator:
         countries = [item['country'] for item in export_countries]
         if len(countries) > len(set(countries)):
             raise serializers.ValidationError(
-                'A country that was discussed cannot be entered in multiple fields.',
+                'You cannot enter the same country in multiple fields.',
                 code='duplicate_export_country',
             )
