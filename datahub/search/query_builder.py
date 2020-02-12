@@ -125,21 +125,16 @@ def get_search_by_multiple_entities_query(
         fields_to_include=None,
         fields_to_exclude=None,
         chaining_model=None,
+        custom_query=None,
 ):
     """
     Performs filtered search for the given term in the given entity.
     """
     filter_data = filter_data or {}
     query = [
-        # Term(_type=entity._doc_type.name),
-        # Term(_type=chaining_model._doc_type.name),
-        {
-            'bool': {
-                'must_not': {
-                    'term': {'history_type': 'update'},
-                },
-            },
-        },
+        Term(_type=entity._doc_type.name),
+        Term(_type=chaining_model._doc_type.name),
+        custom_query,
     ]
 
     if term != '':

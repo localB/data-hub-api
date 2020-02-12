@@ -41,6 +41,16 @@ class ExportCountryHistoryView(SearchAPIView):
         """
             `chaining_model` is where the extra model is brought in
         """
+        custom_query = {
+            'bool': {
+                'must_not': {
+                    'term': {'history_type': 'update'},
+                },
+                'must': {
+                    'term': {'were_countries_discussed': True},
+                },
+            },
+        }
         return get_search_by_multiple_entities_query(
             self.search_app.es_model,
             term=validated_data['original_query'],
@@ -51,6 +61,7 @@ class ExportCountryHistoryView(SearchAPIView):
             fields_to_include=None,
             fields_to_exclude=None,
             chaining_model=Interaction,
+            custom_query=custom_query,
         )
 
     def post(self, request, format=None):
