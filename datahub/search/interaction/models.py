@@ -45,10 +45,7 @@ def _export_country_field():
                     'id': Keyword(),
                     'name': Text(index=False),
                 }),
-            'status': Object(
-                properties={
-                    'type': Keyword(),
-                }),
+            'status': Text(index=False),
         },
     )
 

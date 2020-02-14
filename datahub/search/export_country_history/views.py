@@ -1,13 +1,14 @@
 from oauth2_provider.contrib.rest_framework import IsAuthenticatedOrTokenHasScope
 from rest_framework.response import Response
 
+from datahub.company.models import CompanyExportCountryHistory as DBCompanyExportCountryHistory
 from datahub.oauth.scopes import Scope
 from datahub.search.execute_query import execute_search_query
 from datahub.search.export_country_history import ExportCountryHistoryApp
 from datahub.search.export_country_history.serializers import SearchExportCountryHistorySerializer
 from datahub.search.interaction.models import Interaction
 from datahub.search.permissions import SearchPermissions
-from datahub.search.query_builder import get_search_by_multiple_entities_query, limit_search_query
+from datahub.search.query_builder import get_search_by_entities_query, get_search_by_multiple_entities_query, limit_search_query
 from datahub.search.views import register_v4_view, SearchAPIView
 
 
@@ -33,26 +34,32 @@ class ExportCountryHistoryView(SearchAPIView):
 
     def get_base_query(self, request, validated_data):
         """Gets a filtered Elasticsearch query for the provided search parameters."""
-        filter_data = self._get_filter_data(validated_data)
+        # filter_data = self._get_filter_data(validated_data)
+        filter_data = {
+            **self._get_filter_data(validated_data),
+            # 'were_countries_discussed': True,
+            'history_type': [
+                DBCompanyExportCountryHistory.HistoryType.INSERT,
+                DBCompanyExportCountryHistory.HistoryType.DELETE,
+            ],
+        }
         permission_filters = self.search_app.get_permission_filters(request)
         # TODO: re-enable this for ordering
         # ordering = _map_es_ordering(validated_data['sortby'], self.es_sort_by_remappings)
 
-        """
-            `chaining_model` is where the extra model is brought in
-        """
-        custom_query = {
-            'bool': {
-                'must_not': {
-                    'term': {'history_type': 'update'},
-                },
-                'must': {
-                    'term': {'were_countries_discussed': True},
-                },
-            },
-        }
-        return get_search_by_multiple_entities_query(
-            self.search_app.es_model,
+        # return get_search_by_multiple_entities_query(
+        #     self.search_app.es_model,
+        #     term=validated_data['original_query'],
+        #     filter_data=filter_data,
+        #     composite_field_mapping=self.COMPOSITE_FILTERS,
+        #     permission_filters=permission_filters,
+        #     ordering=None,
+        #     fields_to_include=None,
+        #     fields_to_exclude=None,
+        #     chaining_model=Interaction,
+        # )
+        return get_search_by_entities_query(
+            [self.search_app.es_model, Interaction],
             term=validated_data['original_query'],
             filter_data=filter_data,
             composite_field_mapping=self.COMPOSITE_FILTERS,
@@ -60,8 +67,7 @@ class ExportCountryHistoryView(SearchAPIView):
             ordering=None,
             fields_to_include=None,
             fields_to_exclude=None,
-            chaining_model=Interaction,
-            custom_query=custom_query,
+            chaining_model=None,
         )
 
     def post(self, request, format=None):

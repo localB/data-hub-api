@@ -6,7 +6,7 @@ from datahub.search.serializers import (
     SingleOrListField,
     StringUUIDField,
 )
-# from datahub.search.utils import SearchOrdering, SortDirection
+from datahub.search.utils import SearchOrdering, SortDirection
 
 
 class SearchExportCountryHistorySerializer(EntitySearchQuerySerializer):
@@ -19,11 +19,11 @@ class SearchExportCountryHistorySerializer(EntitySearchQuerySerializer):
     }
 
     # TODO: re-enable these once the history_date field is updated
-    # DEFAULT_ORDERING = SearchOrdering('history_date', SortDirection.desc)
+    DEFAULT_ORDERING = SearchOrdering('date', SortDirection.desc)
 
-    # SORT_BY_FIELDS = (
-    #     'history_date',
-    # )
+    SORT_BY_FIELDS = (
+        'history_date',
+    )
 
     country = SingleOrListField(child=StringUUIDField(), required=False)
     company = SingleOrListField(child=StringUUIDField(), required=False)

@@ -6,7 +6,7 @@ from datahub.search.serializers import (
     SingleOrListField,
     StringUUIDField,
 )
-
+from datahub.search.utils import SearchOrdering, SortDirection
 
 class SearchInteractionQuerySerializer(EntitySearchQuerySerializer):
     """Serialiser used to validate interaction search POST bodies."""
@@ -29,8 +29,7 @@ class SearchInteractionQuerySerializer(EntitySearchQuerySerializer):
     sector_descends = SingleOrListField(child=StringUUIDField(), required=False)
     was_policy_feedback_provided = serializers.BooleanField(required=False)
 
-    # TODO: re-enable this once history_date filed is renamed
-    # DEFAULT_ORDERING = SearchOrdering('date', SortDirection.desc)
+    DEFAULT_ORDERING = SearchOrdering('date', SortDirection.desc)
 
     SORT_BY_FIELDS = (
         'company.name',

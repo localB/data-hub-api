@@ -7,13 +7,14 @@ from freezegun import freeze_time
 from rest_framework import status
 from rest_framework.reverse import reverse
 
+from datahub.company.models import CompanyExportCountry, CompanyExportCountryHistory
 from datahub.company.test.factories import CompanyExportCountryHistoryFactory, CompanyFactory
 from datahub.core.constants import Country as CountryConstant
 from datahub.core.test_utils import (
     APITestMixin,
     create_test_user,
 )
-from datahub.interaction.test.factories import CompanyInteractionFactory
+from datahub.interaction.test.factories import CompanyInteractionFactory, ExportCountriesInteractionFactory
 from datahub.metadata.models import Country
 from datahub.metadata.test.factories import TeamFactory
 from datahub.search.export_country_history import ExportCountryHistoryApp
@@ -34,7 +35,7 @@ FROZEN_DATETIME_3 = datetime(2003, 3, 24, 7, 8, 9, tzinfo=utc).isoformat()
 
 
 @pytest.fixture
-def setup_data():
+def setup_export_country_history_data():
     """Sets up data for the tests."""
     benchmark_country_japan = Country.objects.get(
         pk=CountryConstant.japan.value.id,
@@ -50,29 +51,96 @@ def setup_data():
         CompanyExportCountryHistoryFactory(
             country=benchmark_country_japan,
             company=benchmark_company,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
         )
         CompanyExportCountryHistoryFactory(
             company=benchmark_company,
             country=benchmark_country_canada,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
         )
         CompanyExportCountryHistoryFactory(
             country=benchmark_country_canada,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
         )
-        CompanyExportCountryHistoryFactory()
+        CompanyExportCountryHistoryFactory(
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
 
     with freeze_time(FROZEN_DATETIME_2):
         CompanyExportCountryHistoryFactory(
             country=benchmark_country_japan,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
         )
 
     with freeze_time(FROZEN_DATETIME_3):
         CompanyExportCountryHistoryFactory(
             country=benchmark_country_japan,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+    
+    yield str(benchmark_company.id)
+
+@pytest.fixture
+def setup_interaction_data():
+    benchmark_country_japan = Country.objects.get(
+        pk=CountryConstant.japan.value.id,
+    )
+
+    benchmark_country_canada = Country.objects.get(
+        pk=CountryConstant.canada.value.id,
+    )
+
+    benchmark_company = CompanyFactory()
+
+    with freeze_time(FROZEN_DATETIME_1):
+        CompanyExportCountryHistoryFactory(
+            country=benchmark_country_japan,
+            company=benchmark_company,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+        CompanyExportCountryHistoryFactory(
+            company=benchmark_company,
+            country=benchmark_country_canada,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+        CompanyExportCountryHistoryFactory(
+            country=benchmark_country_canada,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+        CompanyExportCountryHistoryFactory(
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
         )
 
+    with freeze_time(FROZEN_DATETIME_2):
+        CompanyExportCountryHistoryFactory(
+            country=benchmark_country_japan,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+
+    with freeze_time(FROZEN_DATETIME_3):
+        CompanyExportCountryHistoryFactory(
+            country=benchmark_country_japan,
+            history_type=CompanyExportCountryHistory.HistoryType.INSERT,
+        )
+
+    # interactions
+    with freeze_time(FROZEN_DATETIME_2):
+        ExportCountriesInteractionFactory(
+            company=benchmark_company,
+            export_countries__country=benchmark_country_canada,
+            export_countries__status=CompanyExportCountry.Status.NOT_INTERESTED,
+        )
+
+    with freeze_time(FROZEN_DATETIME_3):
         CompanyInteractionFactory(
             company=benchmark_company,
             date=dateutil_parse('2017-10-30T00:00:00Z'),
+        )
+
+        ExportCountriesInteractionFactory(
+            company=benchmark_company,
+            export_countries__country=benchmark_country_japan,
+            export_countries__status=CompanyExportCountry.Status.NOT_INTERESTED,
         )
 
     yield str(benchmark_company.id)
@@ -89,7 +157,11 @@ class TestSearchExportCountryHistory(APITestMixin):
         response = api_client.get(url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_export_country_history_search_with_empty_request(self, es_with_collector, setup_data):
+    def test_export_country_history_search_with_empty_request(
+        self,
+        es_with_collector,
+        setup_export_country_history_data,
+    ):
         """Should return 400."""
         es_with_collector.flush_and_refresh()
         error_response = 'Request must include either country or company parameters'
@@ -107,7 +179,7 @@ class TestSearchExportCountryHistory(APITestMixin):
     def test_filtering_by_country_on_export_country_history_search(
         self,
         es_with_collector,
-        setup_data,
+        setup_export_country_history_data,
     ):
         """
         Test ExportCountryHistory search app with country param.
@@ -139,7 +211,7 @@ class TestSearchExportCountryHistory(APITestMixin):
     def test_filtering_by_company_on_export_country_history_search(
         self,
         es_with_collector,
-        setup_data,
+        setup_export_country_history_data,
     ):
         """
         Test ExportCountryHistory search app with company param.
@@ -147,7 +219,7 @@ class TestSearchExportCountryHistory(APITestMixin):
         es_with_collector.flush_and_refresh()
 
         url = reverse('api-v4:search:export-country-history')
-        company_id = setup_data
+        company_id = setup_export_country_history_data
 
         response = self.api_client.post(
             url,
@@ -165,14 +237,14 @@ class TestSearchExportCountryHistory(APITestMixin):
         assert response.status_code == status.HTTP_200_OK
         assert response.json()['count'] == 2
         assert all(
-            result['company']['id'] == expected_data['company']['id']
+            result['company']['id'] == company_id
             for result in response.json()['results']
         )
 
     def test_filtering_by_company_and_country_on_export_country_history_search(
         self,
         es_with_collector,
-        setup_data,
+        setup_export_country_history_data,
     ):
         """
         Test ExportCountryHistory search app with company param.
@@ -184,14 +256,14 @@ class TestSearchExportCountryHistory(APITestMixin):
         response = self.api_client.post(
             url,
             data={
-                'company': setup_data,
+                'company': setup_export_country_history_data,
                 'country': CountryConstant.canada.value.id,
             },
         )
 
         expected_data = {
             'company': {
-                'id': setup_data,
+                'id': setup_export_country_history_data,
             },
             'country': {
                 'id': CountryConstant.canada.value.id,
@@ -209,7 +281,11 @@ class TestSearchExportCountryHistory(APITestMixin):
             for result in response.json()['results']
         )
 
-    def test_sorting_in_export_country_history(self, es_with_collector, setup_data):
+    def test_sorting_in_export_country_history(
+        self,
+        es_with_collector,
+        setup_export_country_history_data,
+    ):
         """Tests the sorting of country history search response."""
         es_with_collector.flush_and_refresh()
 
@@ -230,3 +306,30 @@ class TestSearchExportCountryHistory(APITestMixin):
         ]
 
         assert date_times == [FROZEN_DATETIME_3, FROZEN_DATETIME_2, FROZEN_DATETIME_1]
+
+    def test_filtering_by_company_on_export_country_history_and_interaction_search(
+        self,
+        es_with_collector,
+        setup_interaction_data,
+    ):
+        """
+        Test ExportCountryHistory search app with company param.
+        """
+        es_with_collector.flush_and_refresh()
+
+        url = reverse('api-v4:search:export-country-history')
+        company_id = setup_interaction_data
+
+        response = self.api_client.post(
+            url,
+            data={
+                'company': company_id,
+            },
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['count'] == 4
+        assert all(
+            result['company']['id'] == company_id
+            for result in response.json()['results']
+        )

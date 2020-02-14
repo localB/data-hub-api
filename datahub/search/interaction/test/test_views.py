@@ -326,6 +326,7 @@ class TestInteractionEntitySearchView(APITestMixin):
             ],
             'is_event': None,
             'event': None,
+            'export_countries': [],
             'service': {
                 'id': str(interaction.service.pk),
                 'name': interaction.service.name,
@@ -359,6 +360,7 @@ class TestInteractionEntitySearchView(APITestMixin):
             'grant_amount_offered': None,
             'net_company_receipt': None,
             'was_policy_feedback_provided': interaction.was_policy_feedback_provided,
+            'were_countries_discussed': None,
             'created_on': interaction.created_on.isoformat(),
             'modified_on': interaction.modified_on.isoformat(),
         }]
@@ -1155,6 +1157,7 @@ class TestInteractionBasicSearch(APITestMixin):
             ],
             'is_event': None,
             'event': None,
+            'export_countries': [],
             'service': {
                 'id': str(interaction.service.pk),
                 'name': interaction.service.name,
@@ -1190,6 +1193,7 @@ class TestInteractionBasicSearch(APITestMixin):
             'was_policy_feedback_provided': interaction.was_policy_feedback_provided,
             'created_on': interaction.created_on.isoformat(),
             'modified_on': interaction.modified_on.isoformat(),
+            'were_countries_discussed': None,
         }]
 
 

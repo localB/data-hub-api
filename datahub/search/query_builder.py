@@ -84,17 +84,50 @@ def get_search_by_entity_query(
     """
     Performs filtered search for the given term in the given entity.
     """
+    get_search_by_entities_query(
+        [entity],
+        term=term,
+        filter_data=filter_data,
+        composite_field_mapping=composite_field_mapping,
+        permission_filters=permission_filters,
+        ordering=ordering,
+        fields_to_include=fields_to_include,
+        fields_to_exclude=fields_to_exclude,
+        chaining_model=chaining_model,
+    )
+
+def get_search_by_entities_query(
+        entities,
+        term=None,
+        filter_data=None,
+        composite_field_mapping=None,
+        permission_filters=None,
+        ordering=None,
+        fields_to_include=None,
+        fields_to_exclude=None,
+        chaining_model=None,
+):
+    """
+    Performs filtered search for the given term across multiple entities.
+    """
     filter_data = filter_data or {}
-    query = [Term(_type=entity._doc_type.name)]
+    # query = [Term(_type=entities[0]._doc_type.name)]
+    query = [
+        Term(_type=entity._doc_type.name)
+        for entity in entities
+    ]
     if term != '':
-        query.append(_build_term_query(term, fields=entity.SEARCH_FIELDS))
+        for entity in entities:
+            query.append(_build_term_query(term, fields=entity.SEARCH_FIELDS))
 
     filters, ranges = _split_range_fields(filter_data)
 
     # document must match all filters in the list (and)
     must_filter = _build_must_queries(filters, ranges, composite_field_mapping)
-    index = entity.get_read_alias() if not chaining_model \
-        else entity.get_multiple_read_aliases(chaining_model)
+    index = [entity.get_read_alias() for entity in entities]
+    # index = entities[0].get_read_alias()
+    # index = entity.get_read_alias() if not chaining_model \
+    #     else entity.get_multiple_read_aliases(chaining_model)
 
     s = Search(
         index=index,
@@ -125,7 +158,6 @@ def get_search_by_multiple_entities_query(
         fields_to_include=None,
         fields_to_exclude=None,
         chaining_model=None,
-        custom_query=None,
 ):
     """
     Performs filtered search for the given term in the given entity.
@@ -133,9 +165,13 @@ def get_search_by_multiple_entities_query(
     filter_data = filter_data or {}
     query = [
         Term(_type=entity._doc_type.name),
-        Term(_type=chaining_model._doc_type.name),
-        custom_query,
+        # Term(_type=chaining_model._doc_type.name),
     ]
+    # query = [
+    #     # Term(_type=entity._doc_type.name),
+    #     # Term(_type=chaining_model._doc_type.name),
+    #     # custom_query,
+    # ]
 
     if term != '':
         query.append(_build_term_query(term, fields=entity.SEARCH_FIELDS))

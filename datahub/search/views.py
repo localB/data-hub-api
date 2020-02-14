@@ -24,7 +24,7 @@ from datahub.search.permissions import (
 )
 from datahub.search.query_builder import (
     get_basic_search_query,
-    get_search_by_entity_query,
+    get_search_by_entities_query,
     limit_search_query,
 )
 from datahub.search.serializers import (
@@ -176,7 +176,7 @@ class SearchAPIView(APIView):
 
     http_method_names = ('post',)
 
-    def _get_filter_data(self, validated_data):
+    def get_filter_data(self, validated_data):
         """Returns filter data."""
         filters = {
             self.REMAP_FIELDS.get(field, field): validated_data[field]
@@ -184,6 +184,10 @@ class SearchAPIView(APIView):
             if field in validated_data
         }
         return filters
+
+    def get_entities(self):
+        """Overridable function for entities"""
+        return self.search_app.es_model
 
     def validate_data(self, data):
         """Validate and clean data."""
@@ -193,12 +197,13 @@ class SearchAPIView(APIView):
 
     def get_base_query(self, request, validated_data):
         """Gets a filtered Elasticsearch query for the provided search parameters."""
-        filter_data = self._get_filter_data(validated_data)
+        filter_data = self.get_filter_data(validated_data)
+        entities = self.get_entities()
         permission_filters = self.search_app.get_permission_filters(request)
         ordering = _map_es_ordering(validated_data['sortby'], self.es_sort_by_remappings)
 
-        return get_search_by_entity_query(
-            self.search_app.es_model,
+        return get_search_by_entities_query(
+            entities,
             term=validated_data['original_query'],
             filter_data=filter_data,
             composite_field_mapping=self.COMPOSITE_FILTERS,

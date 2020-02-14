@@ -14,6 +14,9 @@ class ExportCountryHistory(BaseESModel):
     history_user = fields.id_unindexed_name_field()
     history_type = Keyword()
     country = fields.id_unindexed_name_field()
+    # duplicating history_date as date to be able to sort both
+    # history entries and interactions
+    date = Date()
 
     company = fields.id_unindexed_name_field()
     status = Keyword(index=False)
@@ -26,6 +29,7 @@ class ExportCountryHistory(BaseESModel):
 
     COMPUTED_MAPPINGS = {
         'id': lambda obj: obj.history_id,  # Id required for indexing
+        'date': lambda obj: obj.history_date,
     }
 
     class Meta:
