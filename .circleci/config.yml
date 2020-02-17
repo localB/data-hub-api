@@ -30,7 +30,7 @@ job_defaults: &job_defaults
     ACTIVITY_STREAM_ACCESS_KEY_ID: some-id
     ACTIVITY_STREAM_SECRET_ACCESS_KEY: some-secret
     DATABASE_URL: postgresql://postgres@localhost/datahub
-    MI_DATABASE_URL: postgresql://postgres@mi-postgres/mi
+    MI_DATABASE_URL: postgresql://postgres:datahub@mi-postgres/mi
     DEBUG: 'True'
     DJANGO_SECRET_KEY: changeme
     DJANGO_SETTINGS_MODULE: config.settings.local
