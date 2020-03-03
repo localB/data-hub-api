@@ -3,7 +3,7 @@ from typing import Callable, NamedTuple, Sequence, Type
 
 from django.db import models
 
-from datahub.company.models import Company, Contact
+from datahub.company.models import Company, CompanyExportCountry, Contact
 from datahub.company_referral.models import CompanyReferral
 from datahub.core.exceptions import DataHubException
 from datahub.core.model_helpers import get_related_fields, get_self_referential_relations
@@ -15,6 +15,7 @@ from datahub.user.company_list.models import CompanyListItem
 
 ALLOWED_RELATIONS_FOR_MERGING = {
     Company._meta.get_field('company_list_items').remote_field,
+    CompanyExportCountry.company.field,
     CompanyReferral.company.field,
     Contact.company.field,
     Interaction.company.field,

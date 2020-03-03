@@ -15,6 +15,7 @@ from datahub.company.models import Company, Contact
 from datahub.company.test.factories import (
     AdviserFactory,
     ArchivedCompanyFactory,
+    CompanyExportCountryFactory,
     CompanyFactory,
     ContactFactory,
 )
@@ -448,6 +449,22 @@ class TestDuplicateCompanyMerger:
         user = AdviserFactory()
         with pytest.raises(MergeNotAllowedError):
             merge_companies(source_company, target_company, user)
+
+    def test_merge_when_companies_have_export_countries(self):
+        """
+        Test to make sure merge can be performed when source and target
+        have export countries associated.
+        """
+        source_company = CompanyExportCountryFactory()
+        target_company = CompanyExportCountryFactory()
+
+        user = AdviserFactory()
+
+        merge_companies(source_company, target_company, user)
+
+        source_company.refresh_from_db()
+
+        assert source_company.archived
 
 
 def _company_factory(
