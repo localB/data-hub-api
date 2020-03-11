@@ -1,6 +1,5 @@
 """Company models."""
 import uuid
-from copy import copy
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
