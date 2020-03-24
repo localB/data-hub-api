@@ -277,6 +277,7 @@ class SearchExportAPIView(SearchAPIView):
     queryset = None
     field_titles = None
     db_sort_by_remappings = {}
+    streaming_page_size = None
 
     def post(self, request, format=None):
         """Performs search and returns CSV file."""
@@ -293,8 +294,13 @@ class SearchExportAPIView(SearchAPIView):
         }
 
         record_user_event(request, UserEventType.SEARCH_EXPORT, data=user_event_data)
-
-        return create_csv_response(db_queryset, self.field_titles, base_filename)
+        return create_csv_response(
+            db_queryset,
+            self.field_titles,
+            base_filename,
+            page_transformer_func=self._enrich_page,
+            streaming_page_size=self.streaming_page_size,
+        )
 
     def _get_base_filename(self):
         """Gets the filename (without the .csv suffix) for the CSV file download."""
@@ -365,6 +371,14 @@ class SearchExportAPIView(SearchAPIView):
         prefix = '-' if ordering.is_descending else ''
 
         return f'{prefix}{db_field}', 'pk'
+
+    def _enrich_page(self, data):
+        """
+        Hook to enrich a page of data.
+
+        For example to get extra fields via an API call
+        """
+        return data
 
 
 class AutocompleteSearchListAPIView(ListAPIView):
