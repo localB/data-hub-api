@@ -1,0 +1,16 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block form_top %}
+  {% blocktrans %}
+  <p>
+    Use this form to add a user that‘s already been set up in Staff SSO.
+  <p>
+  </p>
+    Enter any of the user‘s email addresses, or their email user ID, as shown in Staff SSO.
+  </p>
+  <p>
+    Some of the user‘s details will automatically be copied from their Staff SSO record.
+  </p>
+  {% endblocktrans %}
+{% endblock %}
