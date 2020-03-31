@@ -19,6 +19,7 @@ from datahub.dnb_api.link_company import CompanyAlreadyDNBLinkedException, link_
 from datahub.dnb_api.queryset import get_company_queryset
 from datahub.dnb_api.serializers import (
     DNBCompanyChangeRequestSerializer,
+    DNBCompanyInvestigationSerializer,
     DNBCompanyLinkSerializer,
     DNBCompanySerializer,
     DNBMatchedCompanySerializer,
@@ -26,6 +27,7 @@ from datahub.dnb_api.serializers import (
     LegacyDNBCompanyInvestigationSerializer,
 )
 from datahub.dnb_api.utils import (
+    create_investigation,
     DNBServiceConnectionError,
     DNBServiceError,
     DNBServiceInvalidRequest,
@@ -342,5 +344,47 @@ class DNBCompanyChangeRequestView(APIView):
             DNBServiceError,
         ) as exc:
             raise APIUpstreamException(str(exc))
+
+        return Response(response)
+
+
+class DNBCompanyInvestigationView(APIView):
+    """
+    View for creating a new investigation to get D&B to investigate and create a company record.
+    """
+
+    required_scopes = (Scope.internal_front_end,)
+
+    permission_classes = (
+        IsAuthenticatedOrTokenHasScope,
+        HasPermissions(
+            f'company.{CompanyPermission.view_company}',
+            f'company.{CompanyPermission.change_company}',
+        ),
+    )
+
+    @method_decorator(enforce_request_content_type('application/json'))
+    def post(self, request):
+        """
+        A wrapper around the DNB.
+        """
+        investigation_serializer = DNBCompanyInvestigationSerializer(data=request.data)
+        investigation_serializer.is_valid(raise_exception=True)
+
+        data = investigation_serializer.validated_data
+        company = data.pop('company')
+
+        try:
+            response = create_investigation(data)
+
+        except (
+            DNBServiceConnectionError,
+            DNBServiceTimeoutError,
+            DNBServiceError,
+        ) as exc:
+            raise APIUpstreamException(str(exc))
+
+        company.dnb_investigation_id = response['id']
+        company.save()
 
         return Response(response)
